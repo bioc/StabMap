@@ -1,0 +1,34 @@
+Package: StabMap
+Type: Package
+Title: Stabilised mosaic single cell data integration using unshared features
+Version: 0.1.8
+Authors@R: 
+    c(person("Shila", "Ghazanfar", role=c("aut", "cre", "ctb"), 
+    email = "shazanfar@gmail.com"))
+Description: StabMap performs single cell mosaic data integration by first 
+    building a mosaic data topology, and for each reference dataset, traverses 
+    the topology to project and predict data onto a common embedding. Mosaic
+    data should be provided in a list format, with all relevant features 
+    included in the data matrices within each list object. The output of
+    stabMap is a joint low-dimensional embedding taking into account all 
+    available relevant features. Expression imputation can also be performed
+    using the StabMap embedding and any of the original data matrices for 
+    given reference and query cell lists.
+License: GPL-2
+Encoding: UTF-8
+URL: https://marionilab.github.io/StabMap
+BugReports: https://github.com/MarioniLab/StabMap/issues
+biocViews: SingleCell, DimensionReduction, Software
+Depends: R (>= 4.1.0),
+    igraph
+Imports: BiocNeighbors,
+    MASS,
+    Matrix,
+    abind,
+    slam,
+    scran,
+    UpSetR
+Suggests: knitr
+LazyData: false
+RoxygenNote: 7.2.1
+VignetteBuilder: knitr
