@@ -24,6 +24,7 @@ knitr::opts_chunk$set(
 library(StabMap)
 library(SingleCellMultiModal)
 library(scran)
+library(scater)
 ```
 
 ```{r}
@@ -40,7 +41,7 @@ In this vignette we will elaborate on how these steps are implemented in the
 # Load data
 
 ```{r, message=FALSE, warning=FALSE}
-mae <- scMultiome("pbmc_10x", mode = "*", dry.run = FALSE, format = "MTX")
+mae <- scMultiome("pbmc_10x", mode = "*", dry.run = FALSE, format = "MTX", verbose = TRUE)
 ```
 
 Perform some exploration of this data.
