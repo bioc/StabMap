@@ -1,6 +1,7 @@
 #' mosaicDataTopology
 #'
 #' Generate mosaic data topology network as an igraph object.
+#' Trial
 #'
 #' @param assay_list a list of data matrices with rownames (features) specified.
 #'

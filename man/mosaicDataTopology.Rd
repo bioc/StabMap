@@ -17,7 +17,7 @@ rownames among data matrices.
 }
 \description{
 Generate mosaic data topology network as an igraph object.
-Hello - Aiden was here.
+Trial
 }
 \examples{
 set.seed(2021)
