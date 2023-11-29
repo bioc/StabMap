@@ -15,7 +15,7 @@ Then install `StabMap` using `devtools`:
 
 ``` r
 library(devtools)
-devtools::install_github("MarioniLab/StabMap")
+devtools::install_github("SydneyBioX/StabMap")
 ```
 
 ## Vignette
