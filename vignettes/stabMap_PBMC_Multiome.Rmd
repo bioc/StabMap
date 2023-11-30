@@ -33,12 +33,23 @@ set.seed(2021)
 
 # Introduction
 
-StabMap is a technique for performing mosaic single cell data integration. 
+StabMap is a technique for performing mosaic single cell data integration. Mosaic data integration presents the challenge of integration of data where only some features or cells are shared across datasets. For example, these challenges arise when integrating single-cell datasets that measure different molecular profiles, such as chromatin accessibility or RNA expression assays. Integrative analysis of such data may provide a more in-depth profile of each cell, facilitating downstream analysis. To read more about StabMap please see our [paper on Nature](https://www.nature.com/articles/s41587-023-01766-z).  
 
-In this vignette we will elaborate on how these steps are implemented in the 
-`StabMap` package.
+## Vignette Goals
+In this vignette we will elaborate on how mosaic single cell data integration is implemented in the 
+`StabMap` package. We address a few key goals: 
+
+  - Mosaic Data integration for 2 datasets
+  
+  - Demonstrating cell imputation following integration
+  
+  - Indirect mosaic data integration for 3 datasets, including 2 non-overlapping 
+    datasets
 
 # Load data
+
+In this tutorial we will work with a multi-assay single cell dataset, consisting
+of ATAC and gene expression data for 10,032 cells. 
 
 ```{r, message=FALSE, warning=FALSE}
 mae <- scMultiome("pbmc_10x", mode = "*", dry.run = FALSE, format = "MTX", verbose = TRUE)
@@ -58,7 +69,7 @@ dim(experiments(mae)[["rna"]])
 names(experiments(mae))
 ```
 
-Normalise and select features for the RNA modality.
+Normalise and select variable features for the RNA modality.
 
 ```{r}
 sce.rna <- experiments(mae)[["rna"]]
@@ -75,7 +86,7 @@ length(hvgs)
 sce.rna <- sce.rna[hvgs,]
 ```
 
-Normalise and select features for the ATAC modality.
+Normalise and select variable features for the ATAC modality.
 
 ```{r}
 dim(experiments(mae)[["atac"]])
@@ -109,9 +120,10 @@ table(assayType)
 # Mosaic data integration with StabMap
 
 We will simulate a situation where half of the cells correspond to the Multiome
-modality, and half of the cells correspond to the RNA modality. Our goal is
-to then generate a joint embedding of the cells using all data, and to impute 
-the missing ATAC values from the RNA modality cells.
+(RNA + ATAC features) modality, and half of the cells correspond to the RNA modality.
+Our goal is to then integrate both datasets by generating a joint embedding of 
+the cells using all data, and to impute the missing ATAC cell values from the RNA 
+modality cells.
 
 ```{r}
 dataType = setNames(sample(c("RNA", "Multiome"), ncol(logcounts_all),
@@ -139,7 +151,9 @@ datasets, but there are many features that are observed only in the Multiome
 dataset and not the RNA - as we had constructed.
 
 We can understand the `mosaicDataTopology()` of these datasets, which
-generates an `igraph` object, which can be inspected and plotted.
+generates an `igraph` object, which can be inspected and plotted. 
+The `mosaicDataTopology()` is a weighted network where nodes represent each 
+dataset, and edges connect nodes with at least one overlapping feature.   
 
 ```{r}
 mdt = mosaicDataTopology(assay_list)
@@ -151,8 +165,28 @@ From this we note that the datasets RNA and Multiome share at least some
 features. StabMap requires that the mosaic data topology network be connected,
 that is, that there should be a path between every pair of nodes in the network.
 
-We generate a common joint embedding for these data using StabMap. Since the 
-Multiome data contains all features, we treat this as the reference dataset.
+We now aim to integrate the data from the RNA and Multiome modality by generating 
+a common joint embedding for these data using `stabMap()`. The `stabMap()` integration
+approach aims to stabilize integration of single-cell data by exploting the 
+non-overlapping features, so that cells with similar biological profiles will 
+cluster. Stabilisation using non-overlapping features may be important
+when there are limited overlapping features or when the informative features are
+unknown. 
+
+<details>
+  <summary>**What is `stabMap` doing?**</summary>
+`stabMap` generates a joint embedding using 3 steps:
+
+  - Identify the `mosaicDataTopology()`
+  
+- Embed the reference dataset into a lower dimensional space
+  
+- Project cells from non-reference datasets onto the reference dataset embedding
+ using a linear model to traverse shortest paths in the `mosaicDataTopology()`   
+ 
+</details>
+
+Since the Multiome data contains all features, we treat this as the reference dataset.
 Since we already examined the mosaic data topology, we set `plot = FALSE`.
 
 ```{r}
@@ -176,8 +210,12 @@ Here we see that the RNA and Multiome cells are fairly well-mixed.
 
 # Data imputation after StabMap
 
-Given the joint embedding, we can predict the missing ATAC values using
-`imputeEmbedding()`. We provide the data list, the joint embedding as output 
+Given the joint embedding, we can predict the missing ATAC cell values using
+`imputeEmbedding()`. We use `imputeEmbedding()` for demonstration purposes as 
+for our data both modalities have sufficient sample sizes (cells) and thus 
+cellular imputation isn't needed. 
+
+To `imputeEmbedding()` we provide the data list, and the joint embedding as output 
 from `stabMap()`. We set the Multiome cells as reference and the RNA cells as
 query. This is useful for downstream visualisation or further interpretation.
 
@@ -191,6 +229,7 @@ imp = imputeEmbedding(
 class(imp)
 names(imp)
 lapply(imp, dim)
+lapply(assay_list, dim)
 imp[["Multiome"]][1:5,1:5]
 ```
 
@@ -220,10 +259,10 @@ lapply(assay_list_indirect, class)
 ```
 
 Using `mosaicDataUpSet()`, we note that there are no shared features between 
-the ATAC and RNA datasets. We might be able to match features by extracting
+the ATAC and RNA datasets. For their integration we might be able to match features by extracting
 genomic positions and making the "central dogma assumption", that is, that the
 peaks associated with a genomic position overlapping a gene should correspond to
-positive gene expression for that gene. However, we need not make this 
+positive gene expression for that gene. However, using `stabMap()` we need not make this 
 assumption for the data integration to be performed.
 
 ```{r}
@@ -241,9 +280,10 @@ plot(mdt_indirect)
 
 StabMap only requires that the mosaic data topology network be connected,
 that is, that there should be a path between every pair of nodes in the network.
-Since there is a path between RNA and ATAC (via Multiome), we can proceed.
+While ATAC and RNA have no overlapping features, since there is a path between 
+RNA and ATAC (via Multiome), we can proceed.
 
-We now generate a common joint embedding for these data using StabMap. Since the 
+We now generate a common joint embedding for these data using `stabMap()`. Since the 
 Multiome data contains all features, we again treat this as the reference 
 dataset. Since we already examined the mosaic data topology, we set 
 `plot = FALSE`.
