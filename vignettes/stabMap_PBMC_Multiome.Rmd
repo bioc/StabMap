@@ -33,11 +33,18 @@ set.seed(2021)
 
 # Introduction
 
-StabMap is a technique for performing mosaic single cell data integration. Mosaic data integration presents the challenge of integration of data where only some features or cells are shared across datasets. For example, these challenges arise when integrating single-cell datasets that measure different molecular profiles, such as chromatin accessibility or RNA expression assays. Integrative analysis of such data may provide a more in-depth profile of each cell, facilitating downstream analysis. To read more about StabMap please see our [paper on Nature](https://www.nature.com/articles/s41587-023-01766-z).  
+StabMap is a technique for performing mosaic single cell data integration. 
+Mosaic data integration presents the challenge of integration of data where 
+only some features or cells are shared across datasets. For example, these 
+challenges arise when integrating single-cell datasets that measure different 
+molecular profiles, such as chromatin accessibility or RNA expression assays. 
+Integrative analysis of such data may provide a more in-depth profile of each 
+cell, facilitating downstream analysis. To read more about StabMap please see 
+our [paper on Nature](https://www.nature.com/articles/s41587-023-01766-z).  
 
 ## Vignette Goals
-In this vignette we will elaborate on how mosaic single cell data integration is implemented in the 
-`StabMap` package. We address a few key goals: 
+In this vignette we will elaborate on how mosaic single cell data integration 
+is implemented in the `StabMap` package. We address a few key goals: 
 
   - Mosaic Data integration for 2 datasets
   
