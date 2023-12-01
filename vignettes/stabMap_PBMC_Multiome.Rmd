@@ -189,7 +189,7 @@ unknown.
 - Embed the reference dataset into a lower dimensional space
   
 - Project cells from non-reference datasets onto the reference dataset embedding
- using a linear model to traverse shortest paths in the `mosaicDataTopology()`   
+ by using a model to traverse shortest paths in the `mosaicDataTopology()`   
  
 </details>
 
