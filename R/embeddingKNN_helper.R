@@ -1,0 +1,654 @@
+
+#' getArgMin
+#'
+#' For each row in a matrix calculate the first index which gives the minimum
+#' value
+#' 
+#' @param M A matrix.
+#' @param return_colnames Logical whether to return column names of matrix 
+#' (default TRUE). Otherwise return index.
+#' @param identicalNA Logical whether to return NA if all values in a row are 
+#' identical (default TRUE).
+#'
+#' @return A vector containing the first index or column name of the
+#' minimum values for each row of the matrix.
+#'
+#' @keywords internal
+getArgMin = function(M, return_colnames = TRUE, identicalNA = TRUE) {
+  m = max.col(-M, ties.method = "first")
+  
+  if (return_colnames) {
+    if (!is.null(colnames(M)[1])) {
+      m <- colnames(M)[m]
+    }
+  }
+  
+  names(m) <- rownames(M)
+  
+  if (identicalNA) {
+    # if all the values in a row of M are identical,
+    # return NA
+    m[apply(M,1,allEqual)] <- NA
+  }
+  
+  return(m)
+}
+
+
+#' Adaptive k selection for KNN classification
+#' 
+#' Given an error matrix, identify the k that maximises the accuracy for cells
+#' belonging to a provided labelling/grouping. If no labelling given, expect a 
+#' cell-cell similarity network to identify the k that maximises the accuracy 
+#' for cells within that neighbourhood. If neither are given, simply treat all 
+#' cells as if they have the same labelling/grouping
+#'
+#' @param E An error matrix with rows corresponding to cells and columns 
+#' corresponding to candidate k values, with values themselves corresponding to 
+#' error values (either binary for single classification, or continuous after 
+#' multiple classification).
+#' @param labels Group labels for cells.
+#' @param local A neighbourhood index representation, as typically output using 
+#' BiocNeighbors::findKNN().
+#' @param outputPerCell Logical whether to return adaptive k for each cell, not 
+#' just for each label type (used for when labels is given).  
+#' @param ... Includes return_colnames, whether to give the colnames of the best 
+#' selected, or just the index, which is default TRUE.
+#'
+#' @return Vector of adaptive k values.
+#'
+#' @examples 
+#' E = matrix(runif(100),20,5)
+#' colnames(E) <- paste0("K_", 1:5)
+#' 
+#' # generate cell labels
+#' labels = factor(rep(letters[1:2], each = 10))
+#' 
+#' # generate nearest neighbourhood index representation
+#' data = matrix(rpois(10*20, 10), 10, 20) # 10 genes, 20 cells
+#' local = BiocNeighbors::findKNN(t(data), k = 5, get.distance = FALSE)$index
+#' 
+#' best_k_labels = getAdaptiveK(E, 
+#'                              labels = labels)
+#' best_k_local = getAdaptiveK(E,
+#'                             local = local
+#' )
+#'
+#' @keywords internal
+getAdaptiveK = function(E,
+                        labels = NULL,
+                        local = NULL,
+                        outputPerCell = TRUE,
+                        ...) {
+  
+  # adaptive k selection for KNN classification
+  # Given an error matrix E, with rows corresponding to cells
+  # and columns corresponding to candidate k values, with values
+  # themselves corresponding to error values (either binary 
+  # for single classification, or continuous after multiple 
+  # classification)
+  # and given an optional factor labelling/grouping of cells
+  # identify the k that maximises the accuracy for cells belonging
+  # to that label/group
+  # if no labelling given, expect a cell-cell similarity network
+  # to identify the k that maximises the accuracy for cells within
+  # that neighbourhood
+  # if neither are given, simply treat all cells as if they have
+  # the same labelling/grouping.
+  
+  # ... includes return_colnames, whether to give the
+  # colnames of the best selected, or just the index, 
+  # which is default TRUE
+  
+  # if outputPerCell then return a vector of adaptive k
+  # values for each cell, not just for each label type
+  # (used for when labels is given)
+  
+  # if both labels and local given, labels will be 
+  # prioritised
+  
+  # local is a neighbourhood index representation
+  # as typically output using BiocNeighbors::findKNN()
+  
+  # example data generation
+  # data = matrix(rpois(10*20, 10), 10, 20) # 10 genes, 20 cells
+  # local = BiocNeighbors::findKNN(t(data), k = 5, get.distance = FALSE)$index
+  # E = matrix(runif(100),20,5)
+  # colnames(E) <- paste0("K_", 1:5)
+  # labels = factor(rep(letters[1:2], each = 10))
+  
+  require(Matrix)
+  
+  if (is.null(labels) & is.null(local)) {
+    labels = factor(rep("All", nrow(E)))
+  }
+  
+  if (!is.null(labels)) {
+    if (class(labels) != "factor") {
+      labels <- factor(labels)
+    }
+    L = fac2sparse(labels)
+    
+    LE = L %*% E
+    
+    k_best = getArgMin(LE, ...)
+    
+    if (outputPerCell) {
+      k_best <- k_best[labels]
+      names(k_best) <- rownames(E)
+    }
+    
+    return(k_best) 
+  }
+  
+  # if function still running, then use the neighbours in local
+  # ensure that self is also included
+  # local_self = cbind(seq_len(nrow(E)), local)
+  local_self = local
+  
+  LE = apply(E, 2, function(e) rowSums(vectorSubset(e, local_self)))
+  
+  k_best = getArgMin(LE, ...)
+  names(k_best) <- rownames(E)
+  
+  return(k_best)
+}
+
+#' getModeFirst
+#' 
+#' Identify the mode of x up to the first index
+#'
+#' @param x A character or a factor.
+#' @param first An integer.
+#'
+#' @return A character of the mode of x.
+#'
+#' @keywords internal
+getModeFirst = function(x, first) {
+  
+  # identify the mode of x among the first values
+  # x is a character or a factor
+  # first is an integer
+  # x = knn_class[1,]
+  # first = query_best_k[i]
+  names(which.max(table(x[1:first])[unique(x[1:first])]))
+}
+
+#' getQueryK
+#' 
+#' For each cell in the query data, use the 1NN's adaptive k value 
+#' (of the reference data) to identify the local best k value 
+#'
+#' @param knn Is a k-nearest neighbour matrix, giving the indices of the 
+#' training set that the query is closest to. Rows are the query cells, columns 
+#' are the NNs, should be a large value. Typically output using 
+#' BiocNeighbors::queryKNN(,,k = max(k_local)).
+#' @param k_local Is an integer vector length of the reference set, giving the 
+#' local k to use. If k_local is given as a single integer, then that value is 
+#' used as k for all observations.
+#'
+#' @return An integer vector with local k to use for each query cell. 
+#'
+#' @keywords internal
+getQueryK = function(knn, k_local) {
+  
+  
+  # knn is a k-nearest neighbour matrix, giving the 
+  # indices of the training set that the query is 
+  # closest to. Rows are the query cells, columns
+  # are the NNs, should be a large value. Typically
+  # output using BiocNeighbors::queryKNN(,,k = max(k_local))
+  
+  # k_local is an integer vector length of the training
+  # set, giving the local k to use
+  # if k_local is given as a single integer, then
+  # that value is used as k for all observations
+  
+  if (length(k_local) == 1) {
+    k_local <- rep(k_local, nrow(knn))
+    return(k_local)
+  }
+  
+  # Use 1NN to identify the local best k value
+  query_best_k = k_local[knn[,1]]
+  
+  return(query_best_k)
+}
+
+
+#' Adaptive k-Nearest Neighbour Classification
+#'
+#' Adaptive k-Nearest Neighbour Classification for a k-nearest neighbour matrix,
+#' given class labels and local k values for the training data
+#'  
+#'
+#' @param knn Is a k-nearest neighbour matrix, giving the indices of the 
+#' training set that the query is closest to. Rows are the query cells, columns
+#' are the NNs. Typically output using 
+#' BiocNeighbors::queryKNN(,,k = max(k_local)).
+#' @param class Is the labels associated with the training set.
+#' @param k_local Is an integer vector length of the training set, giving the 
+#' local k to use if k_local is given as a single integer, then that value is 
+#' used as k for all observations. 
+#'
+#' @return A character vector of of classifications for the test set. 
+#'
+#' @examples
+#' # Generate example data
+#' data = matrix(rpois(10*20, 10), 10, 20) # 10 genes, 20 cells
+#' data_2 = matrix(rpois(10*30, 10), 10, 30) # 10 genes, 30 cells
+#' 
+#' # Generate error matrix for k_local
+#' E = matrix(runif(100),20,5)
+#' colnames(E) <- paste0("K_", 1:5)
+#' 
+#' # Define training class labels and adaptive k-values
+#' class = factor(rep(letters[1:2], each = 10))
+#' k_local = getAdaptiveK(E, labels = class)
+#' 
+#' # Adaptive KNN classification
+#' test = adaptiveKNN(knn, 
+#'                    class, 
+#'                    k_local)
+#' 
+#' @keywords internal
+adaptiveKNN = function(knn,
+                       class,
+                       k_local) {
+  
+  # knn is a k-nearest neighbour matrix, giving the 
+  # indices of the training set that the query is 
+  # closest to. Rows are the query cells, columns
+  # are the NNs, should be a large value. Typically
+  # output using BiocNeighbors::queryKNN(,,k = max(k_local))
+  
+  # class is the labels associated with the training
+  # set
+  
+  # k_local is an integer vector length of the training
+  # set, giving the local k to use
+  # if k_local is given as a single integer, then
+  # that value is used as k for all observations
+  
+  # example data
+  # data = matrix(rpois(10*20, 10), 10, 20) # 10 genes, 20 cells
+  # local = BiocNeighbors::findKNN(t(data), k = 5, get.distance = FALSE)$index
+  # A = matrix(runif(100),20,5)
+  # colnames(A) <- paste0("K_", 1:5)
+  # labels = factor(rep(letters[1:2], each = 10))
+  # k_local = getAdaptiveK(A, labels = labels)
+  # data_2 = matrix(rpois(10*30, 10), 10, 30) # 10 genes, 30 cells
+  # knn = BiocNeighbors::queryKNN(t(data), t(data_2), k = 5, get.distance = FALSE)$index
+  # class = labels
+  
+  # if (length(k_local) == 1) {
+  #   k_local <- rep(k_local, max(knn))
+  # }
+  # 
+  # # first use 1NN to identify the local best k value
+  # query_best_k = k_local[knn[,1]]
+  
+  query_best_k = getQueryK(knn, k_local)
+  
+  if (any(query_best_k > ncol(knn))) {
+    warning("k is larger than nearest neighbours provided, taking all neighbours given")
+  }
+  
+  # convert the KNN names to the class labels
+  knn_class = vectorSubset(class, knn)
+  
+  # extract the most frequent among the nearest local best k neighbours
+  # new_class = sapply(1:nrow(knn), function(i) getModeFirst(knn_class[i,], query_best_k[i]))
+  # same as:
+  new_class = mapply(getModeFirst, split(knn_class, seq_len(nrow(knn_class))), query_best_k,
+                     USE.NAMES = FALSE)
+  names(new_class) <- rownames(knn_class)
+  
+  return(new_class)
+}
+
+#' isUnequal
+#' 
+#' Checks if elements of 2 vectors are unequal
+#'
+#' @param x A vector.
+#' @param y A vector. 
+#'
+#' @return An integer vector. 1 for unequal. 0 for equal 
+#'
+#' @keywords internal
+isUnequal = function(x,y) {
+  
+  # returns an integer vector
+  1*(as.character(x) != as.character(y))
+}
+
+#' allEqual
+#' 
+#' Checks if a vector is equal to its first element
+#'
+#' @param x A vector.
+#'
+#' @return logical whether a a vector is equal to its first element.
+#'
+#' @keywords internal
+allEqual = function(x) {
+  
+  all(x == x[1])
+}
+
+#' getBinaryError
+#' 
+#' For potential k values, generate a binary error matrix from KNN label 
+#' classification   
+#'
+#' @param knn Is a k-nearest neighbour matrix, giving the indices of the 
+#' training set that the query is closest to. Rows are the query cells, columns 
+#' are the NNs, should be a large value. Typically output using 
+#' BiocNeighbors::queryKNN(,,k = max(k_values)).
+#' @param k_values Is an integer vector of the values of k to consider for 
+#' extracting accuracy. If k_values has names then pass these to colnames of E.
+#' @param class_train Is a factor or character vector of classes that 
+#' corresponds to the indices given within knn.
+#' @param class_true Is a factor or character vector that corresponds to the 
+#' rows of knn. If class_true has names then pass these to rownames of E. 
+#'
+#' @return A sparse binary error matrix. 
+#'
+#' @keywords internal
+getBinaryError = function(knn,
+                          k_values,
+                          class_train,
+                          class_true) {
+  
+  
+  # output is a sparse binary error matrix E
+  
+  # knn is a k-nearest neighbour matrix, giving the 
+  # indices of the training set that the query is 
+  # closest to. Rows are the query cells, columns
+  # are the NNs, should be a large value. Typically
+  # output using BiocNeighbors::queryKNN(,,k = max(k_values))
+  
+  # k_values is an integer vector of the values of k
+  # to consider for extracting accuracy
+  # if k_values has names then pass these to 
+  # colnames of E
+  
+  # class_train is a factor or character vector of
+  # classes that corresponds to the indices given
+  # within knn
+  
+  # class_true is a factor or character vector that
+  # corresponds to the rows of knn
+  # if class_true has names then pass these to rownames
+  # of E
+  
+  # example data
+  # data = matrix(rpois(10*20, 10), 10, 20) # 10 genes, 20 cells
+  # local = BiocNeighbors::findKNN(t(data), k = 5, get.distance = FALSE)$index
+  # A = matrix(runif(100),20,5)
+  # colnames(A) <- paste0("K_", 1:5)
+  # labels = factor(rep(letters[1:2], each = 10))
+  # k_local = getAdaptiveK(A, labels = labels)
+  # data_2 = matrix(rpois(10*30, 10), 10, 30) # 10 genes, 30 cells
+  # knn = BiocNeighbors::queryKNN(t(data), t(data_2), k = 5, get.distance = FALSE)$index
+  # class = labels
+  # class_train = labels
+  # class_true = rep(letters[1], 30)
+  # k_values = c(1,3,5)
+  
+  if (max(unlist(k_values)) > ncol(knn)) {
+    # if (max(k_values) > ncol(knn)) {
+    stop("largest k value is larger than neighbours provided in knn,
+         select a smaller k value or provide more neighbours")
+  }
+  
+  # class_pred = adaptiveKNN(knn, class = class_train, k_local = k_values[1])
+  # isEqual(class_pred, class_true)
+  
+  class_pred = mapply(adaptiveKNN, k_values, MoreArgs = list(class = class_train, knn = knn))
+  E = as(apply(class_pred, 2, isUnequal, y = class_true), "sparseMatrix")
+  
+  rownames(E) <- names(class_true)
+  colnames(E) <- names(k_values)
+  
+  return(E)
+}
+
+#' combineBinaryErrors
+#' 
+#' Combines binary error matrices by averaging error values across all matrices, 
+#' for each entry (row and column combination)
+#'
+#' @param E_list A list containing matrices. Each matrix must have the same 
+#' number of columns (k-values) and contain rownames (cells).
+#'
+#' @return A sparse error matrix.
+#'
+#' @keywords internal
+combineBinaryErrors = function(E_list) {
+  
+  # E_list is a list containing matrices
+  # each matrix must have the same number of columns (k-values)
+  # and contain rownames (cells)
+  
+  # example data
+  # E_1 = as(matrix(rbinom(50, 1, 0.5), 10, 5), "sparseMatrix")
+  # rownames(E_1) <- letters[1:10]
+  # E_2 = as(matrix(rbinom(60, 1, 0.5), 12, 5), "sparseMatrix")
+  # rownames(E_2) <- letters[5:16]
+  # E_list = list(E_1, E_2)
+  
+  if (!allEqual(unlist(lapply(E_list, ncol)))) {
+    stop("each matrix in E_list must have the same number of columns")
+  }
+  
+  if (any(unlist(lapply(E_list, function(x) is.null(rownames(x)))))) {
+    stop("each matrix in E_list must have associated rownames")
+  }
+  
+  all_rows = unlist(lapply(E_list, rownames))
+  
+  E_exp = do.call(rbind, E_list)
+  E_split = split.data.frame(E_exp, all_rows)
+  
+  # data becomes dense at this stage
+  E_means = lapply(E_split, colMeans, na.rm = TRUE)
+  
+  E = as(do.call(rbind, E_means), "sparseMatrix")
+  
+  return(E)  
+}
+
+
+#' getDensityK
+#' 
+#' getDensityK
+#'
+#' @param coords Is a cells (rows) x dimensions matrix for which distances 
+#' should be calculated. 
+#' @param k_values Is a numeric character of maximum k-values to use.
+#' @param dist_maxK Is the maximum distance to consider for estimating the local 
+#' density.
+#'
+#' @return A list.
+#'
+#' @keywords internal
+getDensityK = function(coords, k_values = k_values, dist_maxK = 100) {
+  
+  # coords is a cells (rows) x dimensions matrix for which distances should be calculated
+  # k_values is a numeric character of maximum k-values to use
+  # dist_maxK is the maximum distance to consider for estimating the local density
+  
+  # the output is a list of k-values based on the density for the possible values
+  
+  require(BiocNeighbors)
+  
+  dists = findKNN(coords, k = dist_maxK, get.distance = TRUE)$distance[,dist_maxK]
+  
+  k_norm_unscaled = (1/dists) / max(1/dists)
+  
+  k_norm = ceiling(outer(k_norm_unscaled, k_values))
+  rownames(k_norm) <- rownames(coords)
+  
+  # k_norm_split = split.data.frame(t(k_norm), 1:ncol(k_norm))
+  k_norm_split = sapply(seq_len(ncol(k_norm)), function(i) k_norm[,i], simplify = FALSE)
+  
+  return(k_norm_split)
+}
+
+#' getBestColumn
+#' 
+#' Identifies the index of the column of a matrix with the minimum mean. 
+#' If balanced_labels is given then calculate the balanced mean
+#'
+#' @param E An error matrix. 
+#' @param balanced_labels Class labels for each row (cell) of E. 
+#'
+#' @return The index of the best performing column of E
+#'
+#' @keywords internal
+getBestColumn = function(E,
+                         balanced_labels = NULL) {
+  
+  # returns the index of the best performing column of E
+  # if balanced_labels given then return the best
+  # given the balanced accuracy, otherwise just total accuracy
+  
+  if (is.null(balanced_labels)) {
+    return(which.min(colMeans(E, na.rm = TRUE)))
+  } else {
+    E_lab = apply(E, 2, function(x) tapply(x, balanced_labels, mean))
+    return(which.min(colMeans(E_lab, na.rm = TRUE))) 
+  }
+}
+
+#' smoothLocal
+#' 
+#' Smooth out the adaptive k values. Can be smoothed by computing the 
+#' arithmetic or geometric mean of the adaptive k-values for each cells 
+#' neighbourhood   
+#'
+#' @param best_k Is a named vector of local best k values
+#' @param local Is a KNN matrix, with rows same as best_k and values indices of 
+#' best_k. 
+#' @param smooth An integer of k-nearest neighbours to smooth over.
+#' @param mean_type Character indicating to calculate the 'geometric' or 
+#' 'arithmetic' mean. 
+#'
+#' @return A numeric vector of smoothed adaptive k-values.
+#'
+#' @keywords internal
+smoothLocal = function(best_k, local, smooth = 10, mean_type = "geometric") {
+  
+  # best_k is a named vector of local best k values
+  # local is a matrix with rows same as best_k and values indices of best_k
+  nms = names(best_k)
+  
+  if (mean_type == "arithmetic") {
+    best_k_smooth = ceiling(rowMeans(vectorSubset(best_k, local[,1:smooth])))
+  }
+  if (mean_type == "geometric") {
+    best_k_smooth = ceiling(apply(vectorSubset(best_k, local[,1:smooth]),1, gm_mean))
+  }
+  names(best_k_smooth) <- nms
+  return(best_k_smooth)
+}
+
+#' gm_mean
+#'
+#' Calculate the geometric mean
+#'
+#' @param x A vector.
+#' @param na.rm A logical value indicating whether NA values should be stripped 
+#' before calculating the geometric mean. 
+#'
+#' @return A numeric.
+#'
+#' @keywords internal
+gm_mean = function(x, na.rm=TRUE){
+  
+  if (all(is.na(x))) return(NA)
+  exp(sum(log(x[x > 0]), na.rm=na.rm) / sum(!is.na(x)))
+}
+
+queryNamedKNN = function(coords_reference, coords_query, k) {
+  
+  require(BiocNeighbors)
+  
+  knn = queryKNN(
+    coords_reference,
+    coords_query,
+    k = k, get.distance = FALSE)$index
+  rownames(knn) <- rownames(coords_query)
+  knn_name = vectorSubset(rownames(coords_reference), knn)
+  
+  return(knn_name)
+}
+
+#' buildLabelsDataFrame
+#' 
+#' Build dataframe for output from `embeddingKNN`
+#'
+#' @param labels Is a named character vector with true labels.
+#' @param resubstituted_labels Is a named character vector with predicted 
+#' labels.
+#' @param k_adaptive Is a named vector of the k-values, this could be a single 
+#' integer when fixed.
+#'
+#' @return A dataframe with rows the same as resubstituted_labels and columns 
+#' for input_labels, predicted_labels, and resubstituted_labels. 
+#'
+#' @keywords internal
+buildLabelsDataFrame = function(labels, resubstituted_labels, k_adaptive) {
+  
+  # labels is a named character vector with true labels
+  # resubstituted_labels is a named character vector with
+  # extra labels
+  # k_adaptive is a named vector of the k-values, this could 
+  # be a single integer when fixed
+  
+  # output a dataframe with rows the same as resubstituted_labels
+  # and columns for input_labels, predicted_labels, and resubstituted_labels
+  
+  df = data.frame(input_labels = labels[names(resubstituted_labels)],
+                  resubstituted_labels = resubstituted_labels,
+                  predicted_labels = resubstituted_labels,
+                  row.names = names(resubstituted_labels))
+  df[names(labels), "predicted_labels"] <- labels
+  
+  if (length(k_adaptive) == 1) {
+    df$k = k_adaptive
+  } else {
+    df$k <- k_adaptive[rownames(df)]
+  }
+  
+  return(df)
+}
+
+#' getBinaryErrorFromPredictions
+#' 
+#' Compute binary error between predicted labels and true labels
+#'
+#' @param pred Is a matrix of class label predictions.
+#' @param labels Is a named vector of true labels.
+#'
+#' @return A sparse binary error matrix.
+#'
+#' @keywords internal
+getBinaryErrorFromPredictions = function(pred, labels) {
+  
+  # pred is a matrix of class label predictions
+  # with named rows
+  # labels is a named vector of true labels
+  
+  # output is a binary error matrix, sparse
+  
+  E = as(apply(pred, 2, isUnequal, y = labels[rownames(pred)]), "sparseMatrix")
+  rownames(E) <- names(labels)
+  colnames(E) <- colnames(pred)
+  
+  return(E)
+}
+
