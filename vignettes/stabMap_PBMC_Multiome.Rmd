@@ -254,8 +254,8 @@ extract cell type annotations for our reference dataset (Multiome).
 
 ```{r}
 annotation = "celltype"
-referenceLabels = colData(experiments(mae)[["rna"]])[colnames(Multiome_sce), annotation]
-names(referenceLabels) = colnames(Multiome_sce)
+referenceLabels = colData(experiments(mae)[["rna"]])[colnames(assay_list$Multiome), annotation]
+names(referenceLabels) = colnames(assay_list$Multiome)
 
 table(referenceLabels)
 ```
@@ -279,8 +279,8 @@ annotations use a measure such as accuracy.
 
 ```{r}
 # Extract query labels
-queryLabels = colData(experiments(mae)[["rna"]])[colnames(sce.rna), annotation]
-names(queryLabels) = colnames(sce.rna)
+queryLabels = colData(experiments(mae)[["rna"]])[colnames(assay_list$RNA), annotation]
+names(queryLabels) = colnames(assay_list$RNA)
 
 acc = mean(queryLabels == knn_out[names(queryLabels), "predicted_labels"])
 acc
@@ -292,8 +292,8 @@ UMAP visualisation colour coded by their cell types.
 
 ```{r}
 # Extract reference and query cells from UMAP embedding
-stab_umap_ref = stab_umap[colnames(Multiome_sce),]
-stab_umap_query = stab_umap[colnames(RNA_sce),]
+stab_umap_ref = stab_umap[colnames(assay_list$Multiome),]
+stab_umap_query = stab_umap[colnames(assay_list$RNA),]
 
 # Create UMAP for reference cells
 df_umap_ref = data.frame(
@@ -322,9 +322,7 @@ p_query = df_umap_query %>%
   ggtitle("Query predicted cell types")
 
 grid.arrange(p_ref, p_query, ncol=2)
-#referenceLabels[match(rownames(stab_umap_ref), names(referenceLabels))]
 ```
-
 
 # Indirect mosaic data integration with StabMap
 
