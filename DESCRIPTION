@@ -20,12 +20,12 @@ URL: https://marionilab.github.io/StabMap
 BugReports: https://github.com/MarioniLab/StabMap/issues
 biocViews: SingleCell, DimensionReduction, Software
 Depends: R (>= 4.1.0),
-    igraph
+    igraph,
+    scater
 Imports: BiocNeighbors,
     MASS,
     Matrix,
     abind,
-    slam,
     scran,
     UpSetR
 Suggests: knitr

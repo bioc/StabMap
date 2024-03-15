@@ -18,7 +18,7 @@
 #'
 #' @export
 mosaicDataTopology = function(assay_list) {
-  require(igraph)
+
   # given a list of assays, generate a
   # network relating the datasets to each other
   # in terms of number of shared features

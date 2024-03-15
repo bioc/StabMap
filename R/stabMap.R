@@ -84,9 +84,6 @@ stabMap = function(assay_list,
                    scale.center = TRUE,
                    scale.scale = TRUE) {
 
-  require(igraph)
-  require(scater)
-
   # check various things and error if not:
 
   # the columns of each assay_list (cells) should all have different names
@@ -220,8 +217,6 @@ stabMap = function(assay_list,
 
         if (is.null(labels_list[[reference_dataset]])) next
 
-        require(MASS)
-
         message(paste0("labels provided for \"", reference_dataset, "\", adding LD components"))
 
         features = Reduce(intersect, lapply(assay_list, rownames))
@@ -231,7 +226,6 @@ stabMap = function(assay_list,
 
         if (length(features) > maxFeatures) {
           message("more input features than maxFeatures, subsetting features using variance ranking")
-          require(scran)
           genevars = modelGeneVar(assay_list[[reference_dataset]][features,])
           genevars_sorted = genevars[order(genevars$bio, decreasing = TRUE),]
           features <- rownames(genevars_sorted)[seq_len(maxFeatures)]
@@ -239,7 +233,6 @@ stabMap = function(assay_list,
 
         labels_train = labels_list[[reference_dataset]]
 
-        require(Matrix)
         ## remove features with zero variance for LDA
         vars = rowMaxs(apply(fac2sparse(labels_train), 1, function(x)
           rowWeightedVars(assay_list[[reference_dataset]][features,],x)), na.rm = TRUE)
@@ -327,7 +320,7 @@ stabMap = function(assay_list,
             ## then restrict to HVGs
             if (length(features_current) > maxFeatures) {
               message("more input features than maxFeatures, subsetting features using variance ranking")
-              require(scran)
+
               genevars = modelGeneVar(assay_list[[path_current[1]]][features_current,])
               genevars_sorted = genevars[order(genevars$bio, decreasing = TRUE),]
               features_current <- rownames(genevars_sorted)[seq_len(maxFeatures)]

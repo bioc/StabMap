@@ -49,8 +49,6 @@ imputeEmbedding = function(assay_list,
   # combining function: mean by default
   # default behaviour is to output a smoothed assay_list object
 
-  require(BiocNeighbors)
-
   has_reference = lapply(assay_list, function(x) any(reference %in% colnames(x)))
 
   imputed_list = list()
