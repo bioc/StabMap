@@ -15,4 +15,8 @@
 #' @import BiocNeighbors
 #' @import UpSetR
 #' @import Matrix
+#' @import slam
+#' @import scater
+#' @import SingleCellMultiModal
+#' @import gridExtra
 NULL

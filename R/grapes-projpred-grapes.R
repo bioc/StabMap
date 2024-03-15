@@ -22,9 +22,8 @@
   # object then just perform the prediction
 
   if (is(b, "lda")) {
-    require(MASS)
     features = rownames(b$scaling)
-    am = MASS:::predict.lda(b, newdata = a[,features])$x
+    am = predict(b, newdata = a[,features])$x
     return(am)
   }
 
@@ -35,7 +34,7 @@
   ab = a %*% b[[1]]
   if (is(b[[2]], "lda")) {
     require(MASS)
-    am = MASS:::predict.lda(b[[2]], newdata = a)$x
+    am = predict(b[[2]], newdata = a)$x
   }
   if (is(b[[2]], "svm")) {
     am = attr(predict(b[[2]], newdata = a, decision.values = TRUE), "decision.values")

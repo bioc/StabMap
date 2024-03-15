@@ -21,7 +21,6 @@
 #'
 #' @export
 mosaicDataUpSet = function(assay_list, plot = FALSE, ...) {
-  require(UpSetR)
 
   df = as.data.frame(1 * do.call(
     cbind,
