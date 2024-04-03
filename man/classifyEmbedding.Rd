@@ -80,8 +80,6 @@ labels = rep(paste0("type_", letters[1:5]), 10)
 names(labels) <- rownames(coords)[1:length(labels)]
 
 # Adaptive KNN classification
-knn_out = classifyEmbedding(coords,
-                       labels,
-                       k_values = 1:10)
+knn_out = classifyEmbedding(coords, labels, k_values = 1:10)
 
 }

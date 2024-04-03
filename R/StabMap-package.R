@@ -2,7 +2,7 @@
 #'
 #' Mosaic single cell data integration using non-overlapping features
 #'
-#' @docType package
+#' @docType _PACKAGE
 #'
 #' @author Shila Ghazanfar \email{shazanfar@gmail.com}
 #'

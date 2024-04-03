@@ -8,7 +8,7 @@
 
 # vignette example code
 ############################
-library(StabMap)
+# library(StabMap)
 
 set.seed(2021)
 
