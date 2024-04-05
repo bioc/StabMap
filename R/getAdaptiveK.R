@@ -88,7 +88,7 @@ getAdaptiveK = function(E,
     if (class(labels) != "factor") {
       labels <- factor(labels)
     }
-    L = fac2sparse(labels)
+    L = Matrix::fac2sparse(labels)
 
     LE = L %*% E
 
@@ -107,7 +107,7 @@ getAdaptiveK = function(E,
   # local_self = cbind(seq_len(nrow(E)), local)
   local_self = local
 
-  LE = apply(E, 2, function(e) rowSums(vectorSubset(e, local_self)))
+  LE = apply(E, 2, function(e) Matrix::rowSums(vectorSubset(e, local_self)))
 
   k_best = getArgMin(LE, ...)
   names(k_best) <- rownames(E)

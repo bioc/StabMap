@@ -234,14 +234,14 @@ stabMap = function(assay_list,
         labels_train = labels_list[[reference_dataset]]
 
         ## remove features with zero variance for LDA
-        vars = rowMaxs(apply(fac2sparse(labels_train), 1, function(x)
+        vars = rowMaxs(apply(Matrix::fac2sparse(labels_train), 1, function(x)
           rowWeightedVars(assay_list[[reference_dataset]][features,],x)), na.rm = TRUE)
         if (any(vars == 0)) message("removing features with zero intra-class variance")
         features <- features[vars > 0]
 
         data_train = t(assay_list[[reference_dataset]][features,])
 
-        lda.fit = sm(lda(data_train[!is.na(labels_train),],
+        lda.fit = sm(MASS::lda(data_train[!is.na(labels_train),],
                          grouping = labels_train[!is.na(labels_train)]))
         colnames(lda.fit$scaling) <- paste0(reference_dataset, "_", colnames(lda.fit$scaling))
 

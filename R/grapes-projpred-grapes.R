@@ -33,7 +33,6 @@
 
   ab = a %*% b[[1]]
   if (is(b[[2]], "lda")) {
-    require(MASS)
     am = predict(b[[2]], newdata = a)$x
   }
   if (is(b[[2]], "svm")) {

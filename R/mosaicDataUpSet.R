@@ -35,9 +35,9 @@ mosaicDataUpSet = function(assay_list, plot = FALSE, ...) {
       function(x) Reduce(union, lapply(assay_list, colnames)) %in%
         colnames(x))))
 
-  g <- upset(df,...)
+  g <- UpSetR::upset(df,...)
 
-  g0 <- suppressMessages(upset(df_cells,...))
+  g0 <- suppressMessages(UpSetR::upset(df_cells,...))
   g$Sizes <- g0$Sizes
 
   if (plot) {

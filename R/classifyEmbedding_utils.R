@@ -385,9 +385,9 @@ buildLabelsDataFrame = function(labels, resubstituted_labels, k_adaptive) {
   # output a dataframe with rows the same as resubstituted_labels
   # and columns for input_labels, predicted_labels, and resubstituted_labels
 
-  df = data.frame(input_labels = labels[names(resubstituted_labels)],
-                  resubstituted_labels = resubstituted_labels,
-                  predicted_labels = resubstituted_labels,
+  df = data.frame(input_labels = as.character(labels[names(resubstituted_labels)]),
+                  resubstituted_labels = as.character(resubstituted_labels),
+                  predicted_labels = as.character(resubstituted_labels),
                   row.names = names(resubstituted_labels))
   df[names(labels), "predicted_labels"] <- labels
 

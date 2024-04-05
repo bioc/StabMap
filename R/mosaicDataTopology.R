@@ -35,10 +35,10 @@ mosaicDataTopology = function(assay_list) {
   pairs_overlapping = pairs[edge_weights != 0,, drop = FALSE]
   edge_weights_overlapping = edge_weights[edge_weights != 0]
 
-  g = graph.edgelist(pairs_overlapping, directed = FALSE)
+  g = igraph::graph.edgelist(pairs_overlapping, directed = FALSE)
   E(g)$weight <- edge_weights_overlapping
 
-  g = graph.edgelist(pairs_overlapping, directed = FALSE)
+  g = igraph::graph.edgelist(pairs_overlapping, directed = FALSE)
   sd = setdiff(datasets, V(g)$name)
   if (length(sd) > 0) {
     g <- add_vertices(g, length(sd), name = sd)

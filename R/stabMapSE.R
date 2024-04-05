@@ -13,22 +13,34 @@
 #' and columns corresponding to PCs or LDs for reference dataset(s).
 #'
 #' @examples
-#' set.seed(2021)
-#' library(SingleCellExperiment)
 #'
-#' sce_1 = SingleCellExperiment(assays = list(logcounts = mockMosaicData(names = "D1", ncells = 1000, ngenes = list(1:500))[[1]]))
-#' sce_2 = SingleCellExperiment(assays = list(logcounts = mockMosaicData(names = "D2", ncells = 1000, ngenes = list(251:750))[[1]]))
-#' sce_3 = SingleCellExperiment(assays = list(counts = mockMosaicData(names = "D3", ncells = 1000, ngenes = list(500:750))[[1]]))
+#' sce_1 = SingleCellExperiment(assays = list(
+#' logcounts = mockMosaicData(
+#' names = "D1", ncells = 1000, ngenes = list(1:500))[[1]]
+#' )
+#' )
+#' sce_2 = SingleCellExperiment(assays = list(
+#' logcounts = mockMosaicData(
+#' names = "D2", ncells = 1000, ngenes = list(251:750))[[1]]
+#' )
+#' )
+#' sce_3 = SingleCellExperiment(assays = list(
+#' counts = mockMosaicData(
+#' names = "D3", ncells = 1000, ngenes = list(500:750))[[1]]
+#' )
+#' )
 #'
 #' out = stabMapSE(D1 = sce_1, D2 = sce_2)
 #'
 #' # pass on additional parameters to stabMap()
 #' # e.g. change number of components of reference
-#' out = stabMapSE(D1 = sce_1, D2 = sce_2, args = list(ncomponentsReference = 20))
+#' out = stabMapSE(D1 = sce_1, D2 = sce_2,
+#' args = list(ncomponentsReference = 20))
 #' dim(out)
 #'
 #' # pull out different assay names:
-#' out = stabMapSE(D2 = sce_2, D3 = sce_3, assays = c("D2" = "logcounts", "D3" = "counts"))
+#' out = stabMapSE(D2 = sce_2, D3 = sce_3,
+#' assays = c("D2" = "logcounts", "D3" = "counts"))
 #'
 #' @export
 stabMapSE = function(...,
