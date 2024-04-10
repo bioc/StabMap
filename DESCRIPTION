@@ -23,14 +23,16 @@ Depends: R (>= 4.1.0),
     igraph,
     scater,
     slam
-Imports: BiocNeighbors,
+Imports: 
+    BiocNeighbors,
     Matrix,
     MASS,
     abind,
     scran,
     UpSetR,
     SingleCellMultiModal,
-    gridExtra
+    gridExtra,
+    SummarizedExperiment
 Suggests: knitr,
     BiocStyle
 LazyData: false

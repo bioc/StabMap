@@ -37,6 +37,10 @@
 #' FALSE).
 #' @param scale.scale Logical whether to re-scale data to standard deviation of
 #' 1 (default FALSE).
+#' @param SE_assay_names Either a string indicating the name of the assays for
+#'   the SummarizedExperiment objects in assay_list or a named list of assay
+#'   names, where the names corrispond to the names SE objects in assay_list
+#'   (default "logcounts")
 #'
 #' @return matrix containing common embedding with rows corresponding to cells,
 #' and columns corresponding to PCs or LDs for reference dataset(s).
@@ -82,9 +86,19 @@ stabMap = function(assay_list,
                    maxFeatures = 1000,
                    plot = TRUE,
                    scale.center = TRUE,
-                   scale.scale = TRUE) {
+                   scale.scale = TRUE,
+                   SE_assay_names = "logcounts") {
 
   # check various things and error if not:
+
+  se_idx <- unlist(lapply(assay_list, \(x) is(x, "SummarizedExperiment")))
+
+  if (any(se_idx)) {
+    assay_list[se_idx] <- StabMap::stabMapSE(
+      assay_list[se_idx],
+      assays = SE_assay_names
+    )
+  }
 
   # the columns of each assay_list (cells) should all have different names
   stopifnot("columns of each assay_list (cells) should all have different names"=
