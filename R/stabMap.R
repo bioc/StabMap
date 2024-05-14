@@ -94,7 +94,7 @@ stabMap = function(assay_list,
   se_idx <- unlist(lapply(assay_list, \(x) is(x, "SummarizedExperiment")))
 
   if (any(se_idx)) {
-    assay_list[se_idx] <- StabMap::stabMapSE(
+    assay_list[se_idx] <- stabMapSE(
       assay_list[se_idx],
       assays = SE_assay_names
     )

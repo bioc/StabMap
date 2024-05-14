@@ -18,7 +18,8 @@ stabMap(
   maxFeatures = 1000,
   plot = TRUE,
   scale.center = TRUE,
-  scale.scale = TRUE
+  scale.scale = TRUE,
+  SE_assay_names = "logcounts"
 )
 }
 \arguments{
@@ -67,6 +68,11 @@ FALSE).}
 
 \item{scale.scale}{Logical whether to re-scale data to standard deviation of
 1 (default FALSE).}
+
+\item{SE_assay_names}{Either a string indicating the name of the assays for
+the SummarizedExperiment objects in assay_list or a named list of assay
+names, where the names corrispond to the names SE objects in assay_list
+(default "logcounts")}
 }
 \value{
 matrix containing common embedding with rows corresponding to cells,

@@ -11,6 +11,7 @@
 #' @return matrix containing common embedding with rows corresponding to cells,
 #' and columns corresponding to PCs or LDs for reference dataset(s).
 #' @importFrom SummarizedExperiment assay
+#' @noRd
 stabMapSE <- function(SE_list,
                       assays = "logcounts",
                       args = list()) {

@@ -439,7 +439,7 @@ getBinaryErrorFromPredictions = function(pred, labels) {
 queryNamedKNN = function(coords_reference, coords_query, k) {
   # used in imputeEmbedding()
 
-  knn = queryKNN(
+  knn = BiocNeighbors::queryKNN(
     coords_reference,
     coords_query,
     k = k, get.distance = FALSE)$index
