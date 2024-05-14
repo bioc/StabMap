@@ -72,6 +72,7 @@
 #'
 #' head(out)
 #'
+#' @importFrom MatrixGenerics rowMaxs rowWeightedVars
 #' @export
 stabMap = function(assay_list,
                    labels_list = NULL,
@@ -91,7 +92,9 @@ stabMap = function(assay_list,
 
   # check various things and error if not:
 
-  se_idx <- unlist(lapply(assay_list, \(x) is(x, "SummarizedExperiment")))
+  se_idx <- unlist(
+    lapply(assay_list, \(x) methods::is(x, "SummarizedExperiment"))
+  )
 
   if (any(se_idx)) {
     assay_list[se_idx] <- stabMapSE(
@@ -121,7 +124,7 @@ stabMap = function(assay_list,
 
   # remove features with zero variance
   assay_list <- lapply(assay_list, function(x){
-    x[rowVars(x) > 0,]
+    x[MatrixGenerics::rowVars(x) > 0,]
   })
 
   # if labels_list given the entries should match the ncol(assay_list)
@@ -163,7 +166,7 @@ stabMap = function(assay_list,
 
   ## check whether the network is a connected component
   ## the number of components should be 1:
-  if (components(assay_network)$no != 1) {
+  if (igraph::components(assay_network)$no != 1) {
     stop("feature network is not connected, features must overlap in some way via rownames")
   }
 
@@ -186,8 +189,8 @@ stabMap = function(assay_list,
 
     ## when the graph has a weight, then by default it will use them
     # shortest path is weighted by the number of shared features
-    to_nodes = names(sort(distances(assay_network, to = reference_dataset)[,reference_dataset]))
-    all_paths = lapply(all_shortest_paths(assay_network,
+    to_nodes = names(sort(igraph::distances(assay_network, to = reference_dataset)[,reference_dataset]))
+    all_paths = lapply(igraph::all_shortest_paths(assay_network,
                                           from = reference_dataset)$res, names)
     names(all_paths) <- unlist(lapply(all_paths, function(x) rev(x)[1]))
     all_paths <- all_paths[to_nodes]
@@ -207,12 +210,13 @@ stabMap = function(assay_list,
 
         } else {
 
-        reference_scores_raw = sm(calculatePCA(assay_list[[reference_dataset]][reference_features_list[[reference_dataset]],],
+        reference_scores_raw = sm(
+          scater::calculatePCA(assay_list[[reference_dataset]][reference_features_list[[reference_dataset]],],
                                                ncomponents = nPC,
                                                scale = FALSE))
 
         attr(reference_scores_raw, "rotation") <- list(attr(reference_scores_raw, "rotation"),
-                                                   setNames(rep(0,nrow(attr(reference_scores_raw, "rotation"))),
+                                                   stats::setNames(rep(0,nrow(attr(reference_scores_raw, "rotation"))),
                                                             rownames(attr(reference_scores_raw, "rotation"))))
 
         loadings_reference = attr(reference_scores_raw, "rotation")
@@ -240,7 +244,9 @@ stabMap = function(assay_list,
 
         if (length(features) > maxFeatures) {
           message("more input features than maxFeatures, subsetting features using variance ranking")
-          genevars = modelGeneVar(assay_list[[reference_dataset]][features,])
+          genevars = scran::modelGeneVar(
+            assay_list[[reference_dataset]][features,]
+          )
           genevars_sorted = genevars[order(genevars$bio, decreasing = TRUE),]
           features <- rownames(genevars_sorted)[seq_len(maxFeatures)]
         }
@@ -248,8 +254,8 @@ stabMap = function(assay_list,
         labels_train = labels_list[[reference_dataset]]
 
         ## remove features with zero variance for LDA
-        vars = rowMaxs(apply(Matrix::fac2sparse(labels_train), 1, function(x)
-          rowWeightedVars(assay_list[[reference_dataset]][features,],x)), na.rm = TRUE)
+        vars = MatrixGenerics::rowMaxs(apply(Matrix::fac2sparse(labels_train), 1, function(x)
+          MatrixGenerics::rowWeightedVars(assay_list[[reference_dataset]][features,],x)), na.rm = TRUE)
         if (any(vars == 0)) message("removing features with zero intra-class variance")
         features <- features[vars > 0]
 
@@ -313,15 +319,15 @@ stabMap = function(assay_list,
           if (length(path_current) > 2) {
             nPC_sub = min(ncomponentsSubset[[reference_dataset]], length(features_current))
 
-            dimred_current = sm(calculatePCA(assay_list[[path_current[1]]][features_current,],
+            dimred_current = sm(scater::calculatePCA(assay_list[[path_current[1]]][features_current,],
                                              ncomponents = nPC_sub,
                                              scale = FALSE))
             attr(dimred_current, "rotation") <- list(attr(dimred_current, "rotation"),
                                                      rowMeans(assay_list[[path_current[1]]][features_current,]))
             loadings_current = attr(dimred_current, "rotation")
 
-            coef = lm.fit(cbind(intercept = 1, dimred_current), current_scores)$coefficients
-            coef <- na.omit(coef)
+            coef = stats::lm.fit(cbind(intercept = 1, dimred_current), current_scores)$coefficients
+            coef <- stats::na.omit(coef)
 
             obj[[length(obj) + 1]] <- coef
 
@@ -335,19 +341,21 @@ stabMap = function(assay_list,
             if (length(features_current) > maxFeatures) {
               message("more input features than maxFeatures, subsetting features using variance ranking")
 
-              genevars = modelGeneVar(assay_list[[path_current[1]]][features_current,])
+              genevars = scran::modelGeneVar(
+                assay_list[[path_current[1]]][features_current,]
+              )
               genevars_sorted = genevars[order(genevars$bio, decreasing = TRUE),]
               features_current <- rownames(genevars_sorted)[seq_len(maxFeatures)]
             }
 
-            coef = lm.fit(
+            coef = stats::lm.fit(
               cbind(
                 intercept = 1,
                 as.matrix(t(assay_list[[path_current[1]]][features_current,]))
               ),
               current_scores
             )$coefficients
-            coef <- na.omit(coef)
+            coef <- stats::na.omit(coef)
             obj[[length(obj) + 1]] <- coef
             ops <- c("%*1%", ops)
 

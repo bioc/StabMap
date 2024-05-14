@@ -197,7 +197,7 @@ getBinaryError = function(knn,
   # isEqual(class_pred, class_true)
 
   class_pred = mapply(adaptiveKNN, k_values, MoreArgs = list(class = class_train, knn = knn))
-  E = as(apply(class_pred, 2, isUnequal, y = class_true), "sparseMatrix")
+  E = methods::as(apply(class_pred, 2, isUnequal, y = class_true), "sparseMatrix")
 
   rownames(E) <- names(class_true)
   colnames(E) <- names(k_values)
@@ -245,7 +245,7 @@ combineBinaryErrors = function(E_list) {
   # data becomes dense at this stage
   E_means = lapply(E_split, colMeans, na.rm = TRUE)
 
-  E = as(do.call(rbind, E_means), "sparseMatrix")
+  E = methods::as(do.call(rbind, E_means), "sparseMatrix")
 
   return(E)
 }
@@ -272,7 +272,7 @@ getDensityK = function(coords, k_values = k_values, dist_maxK = 100) {
 
   # the output is a list of k-values based on the density for the possible values
 
-  dists = findKNN(coords, k = dist_maxK, get.distance = TRUE)$distance[,dist_maxK]
+  dists = BiocNeighbors::findKNN(coords, k = dist_maxK, get.distance = TRUE)$distance[,dist_maxK]
 
   k_norm_unscaled = (1/dists) / max(1/dists)
 
@@ -418,7 +418,7 @@ getBinaryErrorFromPredictions = function(pred, labels) {
 
   # output is a binary error matrix, sparse
 
-  E = as(apply(pred, 2, isUnequal, y = labels[rownames(pred)]), "sparseMatrix")
+  E = methods::as(apply(pred, 2, isUnequal, y = labels[rownames(pred)]), "sparseMatrix")
   rownames(E) <- names(labels)
   colnames(E) <- colnames(pred)
 

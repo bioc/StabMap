@@ -21,9 +21,9 @@
   # alternatively, if b is already an lda
   # object then just perform the prediction
 
-  if (is(b, "lda")) {
+  if (methods::is(b, "lda")) {
     features = rownames(b$scaling)
-    am = predict(b, newdata = a[,features])$x
+    am = stats::predict(b, newdata = a[,features])$x
     return(am)
   }
 
@@ -32,11 +32,11 @@
   }
 
   ab = a %*% b[[1]]
-  if (is(b[[2]], "lda")) {
-    am = predict(b[[2]], newdata = a)$x
+  if (methods::is(b[[2]], "lda")) {
+    am = stats::predict(b[[2]], newdata = a)$x
   }
-  if (is(b[[2]], "svm")) {
-    am = attr(predict(b[[2]], newdata = a, decision.values = TRUE), "decision.values")
+  if (methods::is(b[[2]], "svm")) {
+    am = attr(stats::predict(b[[2]], newdata = a, decision.values = TRUE), "decision.values")
   }
 
   return(cbind(ab,am))

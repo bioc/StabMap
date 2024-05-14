@@ -85,7 +85,7 @@ getAdaptiveK = function(E,
   }
 
   if (!is.null(labels)) {
-    if (class(labels) != "factor") {
+    if (!methods::is(labels, "factor")) {
       labels <- factor(labels)
     }
     L = Matrix::fac2sparse(labels)

@@ -19,7 +19,7 @@ stabMapSE <- function(SE_list,
   browser()
 
   if (length(assays) == 1) {
-    assays <- setNames(rep(assays, length(SE_list)), names(SE_list))
+    assays <- stats::setNames(rep(assays, length(SE_list)), names(SE_list))
   }
 
   stopifnot(

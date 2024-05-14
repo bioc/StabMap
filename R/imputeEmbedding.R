@@ -67,15 +67,19 @@ imputeEmbedding = function(assay_list,
       assayMat[,knnval]
     }, simplify = FALSE)
 
-    if (!is(imputedList[[1]], "matrix")) {
+    if (!methods::is(imputedList[[1]], "matrix")) {
 
       # message("only simple (non-sparse) matrix data currently supported, converting to dense matrix")
       # imputedArray = abind(lapply(imputedList, as.matrix), along = 3)
       imputedArray <- slam::as.simple_sparse_array(do.call(cbind, imputedList))
       dim(imputedArray) <- c(dim(imputedList[[1]]), length(imputedList))
 
-      imputedMeans = slam::drop_simple_sparse_array(rollup(imputedArray, 3, NULL, fun))
-      imputedMeans = as(as(as(as(imputedMeans, "array"), "dMatrix"), "generalMatrix"), "CsparseMatrix")
+      imputedMeans = slam::drop_simple_sparse_array(slam::rollup(imputedArray, 3, NULL, fun))
+      imputedMeans = methods::as(methods::as(methods::as(
+        methods::as(
+          imputedMeans, "array"), "dMatrix"), "generalMatrix"),
+        "CsparseMatrix"
+      )
     } else {
 
        imputedArray = abind::abind(imputedList, along = 3)

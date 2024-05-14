@@ -20,5 +20,5 @@
   # output is a matrix with
   # rows equal to length(models) and columns are
   # cells
-  do.call(rbind, lapply(models, predict, t(data)))
+  do.call(rbind, lapply(models, stats::predict, t(data)))
 }

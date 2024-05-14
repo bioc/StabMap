@@ -20,20 +20,22 @@ URL: https://sydneybiox.github.io/StabMap
 BugReports: https://github.com/sydneybiox/StabMap/issues
 biocViews: SingleCell, DimensionReduction, Software
 Depends: R (>= 4.1.0),
+Imports: 
     igraph,
     scater,
-    slam
-Imports: 
+    slam,
     BiocNeighbors,
     Matrix,
     MASS,
     abind,
     scran,
     UpSetR,
-    SingleCellMultiModal,
-    gridExtra,
-    SummarizedExperiment
+    SummarizedExperiment,
+    methods,
+    MatrixGenerics
 Suggests: knitr,
+    gridExtra,
+    SingleCellMultiModal,
     BiocStyle
 LazyData: false
 RoxygenNote: 7.3.1
