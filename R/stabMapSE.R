@@ -16,8 +16,6 @@ stabMapSE <- function(SE_list,
                       assays = "logcounts",
                       args = list()) {
 
-  browser()
-
   if (length(assays) == 1) {
     assays <- stats::setNames(rep(assays, length(SE_list)), names(SE_list))
   }
