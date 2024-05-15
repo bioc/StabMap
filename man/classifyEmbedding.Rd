@@ -7,8 +7,8 @@
 classifyEmbedding(
   coords,
   labels,
-  type = "adaptive_local",
-  k_values = 1:50,
+  type = "uniform_fixed",
+  k_values = 5,
   error_measure = "simple_error",
   adaptive_nFold = 2,
   adaptive_nRep = 5,
@@ -27,10 +27,11 @@ Typically, output from `stabMap()`.}
 
 \item{type}{A character of the type of adaptive KNN classification to be
 used. Must be one of "adaptive_local", "adaptive_labels",
-"uniform_optimised", "uniform_fixed", or "adaptive_density".}
+"uniform_optimised", "uniform_fixed", or "adaptive_density". Default
+is "uniform_fixed".}
 
 \item{k_values}{A numeric vector of potential k values. If type is
-"uniform_fixed", then the first value of k_values is used.}
+"uniform_fixed", then the first value of k_values is used. Default is 5.}
 
 \item{error_measure}{Is the error type to use for selection of the best k.
 Must be one of "simple_error" or "balanced_error". "simple_error" weights all
@@ -75,11 +76,12 @@ embedding treated as the testing set.
 coords = matrix(rnorm(1000), 100, 10)
 rownames(coords) <- paste0("cell_", 1:nrow(coords))
 
-# Define labels of training set
+# Define labels of the first 50 cells
 labels = rep(paste0("type_", letters[1:5]), 10)
 names(labels) <- rownames(coords)[1:length(labels)]
 
 # Adaptive KNN classification
-knn_out = classifyEmbedding(coords, labels, k_values = 1:10)
+knn_out = classifyEmbedding(coords, labels, type = "uniform_fixed", k_values = 5)
+table(knn_out$predicted_labels)
 
 }
