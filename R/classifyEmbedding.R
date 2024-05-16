@@ -11,15 +11,14 @@
 #' @param labels A named character vector of labels for the training set.
 #' @param type A character of the type of adaptive KNN classification to be
 #' used. Must be one of "adaptive_local", "adaptive_labels",
-#' "uniform_optimised", "uniform_fixed", or "adaptive_density". Default
+#' "uniform_optimised", or "uniform_fixed". Default
 #' is "uniform_fixed".
 #' @param k_values A numeric vector of potential k values. If type is
 #' "uniform_fixed", then the first value of k_values is used. Default is 5.
 #' @param error_measure Is the error type to use for selection of the best k.
 #' Must be one of "simple_error" or "balanced_error". "simple_error" weights all
 #' cells equally. "balanced_error" weights error by `labels` factors. Only
-#' affects error type for type == "adaptive_density" and type ==
-#' "uniform_optimised".
+#' affects error type for type == "uniform_optimised".
 #' @param adaptive_nFold Is the number of folds for adaptive selection
 #' cross-validation.
 #' @param adaptive_nRep Is the number of repetitions of adaptive selection
@@ -27,8 +26,6 @@
 #' @param adaptive_local_nhood Is the neighbourhood size for optimising locally.
 #' @param adaptive_local_smooth Is the number of neighbours to use for smoothing
 #' locally.
-#' @param adaptive_density_maxK Is the maximum k to use for estimating the
-#' relative density.
 #' @param verbose Logical whether to print repetition and fold number for
 #' adaptive selection cross-validation.
 #'
@@ -49,10 +46,41 @@
 #' labels <- rep(paste0("type_", letters[1:5]), 10)
 #' names(labels) <- rownames(coords)[1:length(labels)]
 #'
-#' # Adaptive KNN classification
+#' # Uniform fixed KNN classification
 #' knn_out <- classifyEmbedding(
 #'   coords, labels,
 #'   type = "uniform_fixed", k_values = 5
+#' )
+#' table(knn_out$predicted_labels)
+#'
+#' # Adaptive KNN classification using local error
+#' knn_out <- classifyEmbedding(
+#' coords, labels,
+#' type = "adaptive_local",
+#' k_values = 2:4,
+#' adaptive_nFold = 5,
+#' adaptive_nRep = 10
+#' )
+#' table(knn_out$predicted_labels)
+#'
+#  # Adaptive KNN classification using adaptive labels
+#' knn_out <- classifyEmbedding(
+#'   coords, labels,
+#'   type = "adaptive_labels",
+#'   k_values = 2:4,
+#'   adaptive_nFold = 5,
+#'   adaptive_nRep = 10
+#' )
+#' table(knn_out$predicted_labels)
+#'
+#' # Adaptive KNN classification using uniform optimised with balanced error
+#' knn_out <- classifyEmbedding(
+#'   coords, labels,
+#'   type = "uniform_optimised",
+#'   k_values = 2:4,
+#'   adaptive_nFold = 3,
+#'   adaptive_nRep = 10,
+#'   error_measure = "balanced_error"
 #' )
 #' table(knn_out$predicted_labels)
 #'
@@ -67,7 +95,6 @@ classifyEmbedding <- function(
     adaptive_nRep = 5,
     adaptive_local_nhood = 100,
     adaptive_local_smooth = 10,
-    adaptive_density_maxK = 100,
     verbose = TRUE) {
   # to-do:
   # the cross validation step can be parallelised
@@ -77,7 +104,7 @@ classifyEmbedding <- function(
   # distances are to be calculated. coords must have rownames
   # labels is a named character vector
   # type is one of "adaptive_local", "adaptive_labels",
-  # "uniform_optimised", "uniform_fixed", or "adaptive_density"
+  # "uniform_optimised", or "uniform_fixed"
   # k_values is a numeric vector of potential values. if type is "uniform_fixed",
   # then the first value of k_values is used.
   # error_measure is the error type to use for selection. Simple error is used
@@ -86,7 +113,6 @@ classifyEmbedding <- function(
   # adaptive_nRep is the number of repetitions of adaptive selection cross-validation
   # adaptive_local_nhood is the neighbourhood size for optimising locally
   # adaptive_local_smooth is the number of neighbours to use for smoothing locally
-  # adaptive_density_maxK is the maximum k to use for estimating the relative density
 
   # output is a dataframe with rows the same as coords, and same rownames
   # columns are input_labels: NA-filled labels that were input
@@ -129,36 +155,6 @@ classifyEmbedding <- function(
   }
 
   # all other types require some adaptive or optimised component
-
-  # if type is based on density (of all data), then calculate the error rates
-  # for these density based choices, and select the best k's for them
-
-  if (type == "adaptive_density") {
-    densityK_all <- getDensityK(
-      coords,
-      k_values = k_values, dist_maxK = adaptive_density_maxK
-    )
-
-    max_k <- max(unlist(densityK_all), na.rm = TRUE)
-
-    knn <- queryNamedKNN(coords_train, coords_train, k = max_k)
-
-    densityK_pred <- mapply(
-      adaptiveKNN, densityK_all,
-      MoreArgs = list(class = labels, knn = knn)
-    )
-
-    E <- getBinaryErrorFromPredictions(densityK_pred, labels)
-
-    # select the best column based on the error type
-    if (error_measure == "simple_error") {
-      best_column <- getBestColumn(E)
-    }
-    if (error_measure == "balanced_error") {
-      best_column <- getBestColumn(E, balanced_labels = labels[rownames(E)])
-    }
-    k_adaptive <- densityK_all[[best_column]]
-  }
 
   # if neither of above types are chosen, then an error matrix
   # is needed, using internal cross-validation

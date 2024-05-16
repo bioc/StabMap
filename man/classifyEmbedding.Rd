@@ -14,7 +14,6 @@ classifyEmbedding(
   adaptive_nRep = 5,
   adaptive_local_nhood = 100,
   adaptive_local_smooth = 10,
-  adaptive_density_maxK = 100,
   verbose = TRUE
 )
 }
@@ -27,7 +26,7 @@ Typically, output from `stabMap()`.}
 
 \item{type}{A character of the type of adaptive KNN classification to be
 used. Must be one of "adaptive_local", "adaptive_labels",
-"uniform_optimised", "uniform_fixed", or "adaptive_density". Default
+"uniform_optimised", or "uniform_fixed". Default
 is "uniform_fixed".}
 
 \item{k_values}{A numeric vector of potential k values. If type is
@@ -36,8 +35,7 @@ is "uniform_fixed".}
 \item{error_measure}{Is the error type to use for selection of the best k.
 Must be one of "simple_error" or "balanced_error". "simple_error" weights all
 cells equally. "balanced_error" weights error by `labels` factors. Only
-affects error type for type == "adaptive_density" and type ==
-"uniform_optimised".}
+affects error type for type == "uniform_optimised".}
 
 \item{adaptive_nFold}{Is the number of folds for adaptive selection
 cross-validation.}
@@ -49,9 +47,6 @@ cross-validation.}
 
 \item{adaptive_local_smooth}{Is the number of neighbours to use for smoothing
 locally.}
-
-\item{adaptive_density_maxK}{Is the maximum k to use for estimating the
-relative density.}
 
 \item{verbose}{Logical whether to print repetition and fold number for
 adaptive selection cross-validation.}
@@ -80,10 +75,40 @@ rownames(coords) <- paste0("cell_", 1:nrow(coords))
 labels <- rep(paste0("type_", letters[1:5]), 10)
 names(labels) <- rownames(coords)[1:length(labels)]
 
-# Adaptive KNN classification
+# Uniform fixed KNN classification
 knn_out <- classifyEmbedding(
   coords, labels,
   type = "uniform_fixed", k_values = 5
+)
+table(knn_out$predicted_labels)
+
+# Adaptive KNN classification using local error
+knn_out <- classifyEmbedding(
+coords, labels,
+type = "adaptive_local",
+k_values = 2:4,
+adaptive_nFold = 5,
+adaptive_nRep = 10
+)
+table(knn_out$predicted_labels)
+
+knn_out <- classifyEmbedding(
+  coords, labels,
+  type = "adaptive_labels",
+  k_values = 2:4,
+  adaptive_nFold = 5,
+  adaptive_nRep = 10
+)
+table(knn_out$predicted_labels)
+
+# Adaptive KNN classification using uniform optimised with balanced error
+knn_out <- classifyEmbedding(
+  coords, labels,
+  type = "uniform_optimised",
+  k_values = 2:4,
+  adaptive_nFold = 3,
+  adaptive_nRep = 10,
+  error_measure = "balanced_error"
 )
 table(knn_out$predicted_labels)
 

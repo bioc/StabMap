@@ -240,59 +240,13 @@ combineBinaryErrors <- function(E_list) {
   E_split <- split.data.frame(E_exp, all_rows)
 
   # data becomes dense at this stage
-  E_means <- lapply(E_split, colMeans, na.rm = TRUE)
+  E_means <- lapply(E_split, Matrix::colMeans, na.rm = TRUE)
 
   E <- methods::as(do.call(rbind, E_means), "sparseMatrix")
 
   return(E)
 }
 
-
-#' getDensityK
-#'
-#' getDensityK
-#'
-#' @param coords Is a cells (rows) x dimensions matrix for which distances
-#' should be calculated.
-#' @param k_values Is a numeric character of maximum k-values to use.
-#' @param dist_maxK Is the maximum distance to consider for estimating the local
-#' density.
-#'
-#' @return A list.
-#'
-#' @keywords internal
-getDensityK <- function(coords, k_values = k_values, dist_maxK = 100) {
-  # coords is a cells (rows) x dimensions matrix for which distances should be
-  # calculated
-  # k_values is a numeric character of maximum k-values to use
-  # dist_maxK is the maximum distance to consider for estimating the local
-  # density
-
-  # the output is a list of k-values based on the density for the possible
-  # values
-
-  dists <- BiocNeighbors::findKNN(
-    coords,
-    k = dist_maxK, get.distance = TRUE
-  )$distance[, dist_maxK]
-
-  k_norm_unscaled <- (1 / dists) / max(1 / dists)
-
-  k_norm <- ceiling(outer(k_norm_unscaled, k_values))
-  rownames(k_norm) <- rownames(coords)
-
-  k_norm_split <- sapply(
-    seq_len(ncol(k_norm)), function(i) k_norm[, i],
-    simplify = FALSE
-  )
-  # k_norm_split <- as.list(vapply(
-  #   seq_len(ncol(k_norm)),
-  #   function(i) k_norm[, i],
-  #   FUN.VALUE = integer(nrow(k_norm))
-  # ))
-
-  return(k_norm_split)
-}
 
 #' getBestColumn
 #'
