@@ -73,15 +73,15 @@ embedding treated as the testing set.
 }
 \examples{
 # Simulate coordinates
-coords = matrix(rnorm(1000), 100, 10)
+coords <- matrix(rnorm(1000), 100, 10)
 rownames(coords) <- paste0("cell_", 1:nrow(coords))
 
 # Define labels of the first 50 cells
-labels = rep(paste0("type_", letters[1:5]), 10)
+labels <- rep(paste0("type_", letters[1:5]), 10)
 names(labels) <- rownames(coords)[1:length(labels)]
 
 # Adaptive KNN classification
-knn_out = classifyEmbedding(coords, labels, type = "uniform_fixed", k_values = 5)
+knn_out <- classifyEmbedding(coords, labels, type = "uniform_fixed", k_values = 5)
 table(knn_out$predicted_labels)
 
 }

@@ -17,21 +17,26 @@
 #'
 #' @examples
 #' # Generate example data
-#' # data = matrix(rpois(10*20, 10), 10, 20) # 10 genes, 20 cells
-#' # data_2 = matrix(rpois(10*30, 10), 10, 30) # 10 genes, 30 cells
+#' data <- matrix(rpois(10 * 20, 10), 10, 20) # 10 genes, 20 cells
+#' data_2 <- matrix(rpois(10 * 30, 10), 10, 30) # 10 genes, 30 cells
 #'
 #' # Generate error matrix for k_local
-#' # E = matrix(runif(100),20,5)
-#' # colnames(E) <- paste0("K_", 1:5)
+#' E <- matrix(runif(100), 20, 5)
+#' colnames(E) <- paste0("K_", 1:5)
 #'
 #' # Define training class labels and adaptive k-values
-#' # class = factor(rep(letters[1:2], each = 10))
-#' # k_local = getAdaptiveK(E, labels = class)
+#' class <- factor(rep(letters[1:2], each = 10))
+#' k_local <- getAdaptiveK(E, labels = class)
 #'
-#' # knn = queryKNN(t(data), t(data_2), k = max(as.numeric(gsub("K_", "", k_local))))$index
+#' knn <- queryKNN(
+#'   t(data), t(data_2),
+#'   k = max(as.numeric(gsub("K_", "", k_local)))
+#' )$index
 #'
 #' # Adaptive KNN classification
-#' # test = adaptiveKNN(knn, class, as.numeric(gsub("K_", "", k_local)))
+#' test <- adaptiveKNN(
+#'   knn, class, as.numeric(gsub("K_", "", k_local))
+#' )
 #'
 #' @export
 adaptiveKNN <- function(knn,

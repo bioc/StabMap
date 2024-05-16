@@ -34,11 +34,11 @@ examples.
 }
 \examples{
 set.seed(2021)
-assay_list = mockMosaicData()
+assay_list <- mockMosaicData()
 lapply(assay_list, dim)
 
 # simulate data from another distribution
-assay_list = mockMosaicData(fun = "rnbinom", size = 5, prob = 0.5)
+assay_list <- mockMosaicData(fun = "rnbinom", size = 5, prob = 0.5)
 lapply(assay_list, dim)
 
 }

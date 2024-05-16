@@ -38,19 +38,20 @@ and joint embedding from StabMap.
 }
 \examples{
 set.seed(2021)
-assay_list = mockMosaicData()
+assay_list <- mockMosaicData()
 lapply(assay_list, dim)
 
 # stabMap
-out = stabMap(assay_list,
-              ncomponentsReference = 20,
-              ncomponentsSubset = 20)
+out <- stabMap(assay_list,
+  ncomponentsReference = 20,
+  ncomponentsSubset = 20
+)
 
 # impute values
-imp = imputeEmbedding(assay_list, out)
+imp <- imputeEmbedding(assay_list, out)
 
 # inspect the imputed values
 lapply(imp, dim)
-imp[[1]][1:5,1:5]
+imp[[1]][1:5, 1:5]
 
 }

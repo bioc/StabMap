@@ -86,16 +86,16 @@ discriminant (LD) embedding.
 }
 \examples{
 set.seed(2021)
-assay_list = mockMosaicData()
+assay_list <- mockMosaicData()
 lapply(assay_list, dim)
 
 # specify which datasets to use as reference coordinates
-reference_list = c("D1", "D3")
+reference_list <- c("D1", "D3")
 
 # specify some sample labels to distinguish using linear discriminant
 # analysis (LDA)
-labels_list = list(
-D1 = rep(letters[1:5], length.out = ncol(assay_list[["D1"]]))
+labels_list <- list(
+  D1 = rep(letters[1:5], length.out = ncol(assay_list[["D1"]]))
 )
 
 # examine the topology of this mosaic data integration
@@ -103,11 +103,12 @@ mosaicDataUpSet(assay_list)
 plot(mosaicDataTopology(assay_list))
 
 # stabMap
-out = stabMap(assay_list,
-              reference_list = reference_list,
-              labels_list = labels_list,
-              ncomponentsReference = 20,
-              ncomponentsSubset = 20)
+out <- stabMap(assay_list,
+  reference_list = reference_list,
+  labels_list = labels_list,
+  ncomponentsReference = 20,
+  ncomponentsSubset = 20
+)
 
 head(out)
 

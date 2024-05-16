@@ -23,7 +23,7 @@ Plots feature overlaps of mosaic data as an UpSet plot.
 }
 \examples{
 set.seed(2021)
-assay_list = mockMosaicData()
+assay_list <- mockMosaicData()
 lapply(assay_list, dim)
 mosaicDataUpSet(assay_list)
 

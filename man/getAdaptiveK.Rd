@@ -34,20 +34,21 @@ for cells within that neighbourhood. If neither are given, simply treat all
 cells as if they have the same labelling/grouping
 }
 \examples{
-E = matrix(runif(100),20,5)
+E <- matrix(runif(100), 20, 5)
 colnames(E) <- paste0("K_", 1:5)
 
 # generate cell labels
-labels = factor(rep(letters[1:2], each = 10))
+labels <- factor(rep(letters[1:2], each = 10))
 
 # generate nearest neighbourhood index representation
-data = matrix(rpois(10*20, 10), 10, 20) # 10 genes, 20 cells
-local = BiocNeighbors::findKNN(t(data), k = 5, get.distance = FALSE)$index
+data <- matrix(rpois(10 * 20, 10), 10, 20) # 10 genes, 20 cells
+local <- BiocNeighbors::findKNN(t(data), k = 5, get.distance = FALSE)$index
 
-best_k_labels = getAdaptiveK(E,
-                             labels = labels)
-best_k_local = getAdaptiveK(E,
-                            local = local
+best_k_labels <- getAdaptiveK(E,
+  labels = labels
+)
+best_k_local <- getAdaptiveK(E,
+  local = local
 )
 
 }
