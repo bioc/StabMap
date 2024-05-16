@@ -2,6 +2,8 @@
 title: "StabMap: Stabilised mosaic single cell data integration using unshared features"
 author:
   - Shila Ghazanfar
+  - Nick Robertson
+  - Aiden Jin
 output:
   BiocStyle::html_document:
     toc_float: true
@@ -30,7 +32,7 @@ library(gridExtra)
 ```
 
 ```{r}
-set.seed(2021)
+set.seed(2024)
 ```
 
 # Introduction
@@ -42,7 +44,7 @@ challenges arise when integrating single-cell datasets that measure different
 molecular profiles, such as chromatin accessibility or RNA expression assays. 
 Integrative analysis of such data may provide a more in-depth profile of each 
 cell, facilitating downstream analysis. To read more about StabMap please see 
-our [paper on Nature](https://www.nature.com/articles/s41587-023-01766-z).  
+our [paper on Nature Biotechnology](https://www.nature.com/articles/s41587-023-01766-z).  
 
 ## Vignette Goals
 In this vignette we will elaborate on how mosaic single cell data integration 
@@ -78,10 +80,12 @@ dim(experiments(mae)[["rna"]])
 names(experiments(mae))
 ```
 
-Normalise and select variable features for the RNA modality.
+Keep the first 2,000 cells only. Normalise and select variable features for the 
+RNA modality.
+
 
 ```{r}
-sce.rna <- experiments(mae)[["rna"]]
+sce.rna <- experiments(mae)[["rna"]][,1:2000]
 
 # Normalisation
 sce.rna <- logNormCounts(sce.rna)
@@ -95,12 +99,12 @@ length(hvgs)
 sce.rna <- sce.rna[hvgs,]
 ```
 
-Normalise and select variable features for the ATAC modality.
+Keep the first 2,000 cells only. Normalise and select variable features for the ATAC modality.
 
 ```{r}
 dim(experiments(mae)[["atac"]])
 
-sce.atac <- experiments(mae)[["atac"]]
+sce.atac <- experiments(mae)[["atac"]][,1:2000]
 
 # Normalise
 sce.atac <- logNormCounts(sce.atac)
