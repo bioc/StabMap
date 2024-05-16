@@ -19,7 +19,7 @@ Encoding: UTF-8
 URL: https://sydneybiox.github.io/StabMap
 BugReports: https://github.com/sydneybiox/StabMap/issues
 biocViews: SingleCell, DimensionReduction, Software
-Depends: R (>= 4.1.0),
+Depends: R (>= 4.4.0),
 Imports: 
     igraph,
     scater,
@@ -32,11 +32,14 @@ Imports:
     UpSetR,
     SummarizedExperiment,
     methods,
-    MatrixGenerics
-Suggests: knitr,
+    MatrixGenerics,
+    BiocGenerics
+Suggests: 
+    knitr,
     gridExtra,
     SingleCellMultiModal,
-    BiocStyle
+    BiocStyle,
+    magrittr
 LazyData: false
 RoxygenNote: 7.3.1
 VignetteBuilder: knitr
