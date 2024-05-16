@@ -26,6 +26,7 @@ knitr::opts_chunk$set(
 library(StabMap)
 library(scran)
 library(scater)
+library(magrittr)
 
 library(SingleCellMultiModal)
 library(gridExtra)
@@ -85,7 +86,7 @@ RNA modality.
 
 
 ```{r}
-sce.rna <- experiments(mae)[["rna"]][,1:2000]
+sce.rna <- experiments(mae)[["rna"]]
 
 # Normalisation
 sce.rna <- logNormCounts(sce.rna)
@@ -104,7 +105,7 @@ Keep the first 2,000 cells only. Normalise and select variable features for the 
 ```{r}
 dim(experiments(mae)[["atac"]])
 
-sce.atac <- experiments(mae)[["atac"]][,1:2000]
+sce.atac <- experiments(mae)[["atac"]]
 
 # Normalise
 sce.atac <- logNormCounts(sce.atac)
