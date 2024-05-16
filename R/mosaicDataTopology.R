@@ -44,7 +44,10 @@ mosaicDataTopology <- function(assay_list) {
   }
 
   if (igraph::components(g)$no != 1) {
-    message("feature network is not connected, features must overlap via rownames for StabMap to run")
+    message(
+      "feature network is not connected, features must overlap via",
+      " rownames for StabMap to run"
+    )
   }
 
   # add some aesthetic attributes to the network

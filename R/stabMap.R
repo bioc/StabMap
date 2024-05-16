@@ -9,13 +9,16 @@
 #' @param labels_list (optional) named list containing cell labels
 #' @param reference_list Named list containing logical values whether the data
 #' matrix should be considered as a reference dataset, alternatively a
-#' character vector containing the names of the reference data matrices.
+#' character vector containing the names of the reference data matrices. If
+#' NULL, defaults to:
+#'  sapply(names(assay_list), function(x) TRUE, simplify = FALSE)
 #' @param reference_features_list List of features to consider as reference data
 #' (default is all available features).
-#' @param reference_scores_list Named list of reference scores (default NULL). If
-#' provided, matrix of cells (rows with rownames given) and dimensions (columns
-#' with colnames given) are used as the reference low-dimensional embedding to
-#' target, as opposed to performing PCA or LDA on the input reference data.
+#' @param reference_scores_list Named list of reference scores (default NULL).
+#' If provided, matrix of cells (rows with rownames given) and dimensions
+#' (columns with colnames given) are used as the reference low-dimensional
+#' embedding to target, as opposed to performing PCA or LDA on the input
+#' reference data.
 #' @param ncomponentsReference Number of principal components for embedding
 #' reference data, given either as an integer or a named list for each
 #' reference dataset.
@@ -77,7 +80,7 @@
 #' @export
 stabMap <- function(assay_list,
                     labels_list = NULL,
-                    reference_list = sapply(names(assay_list), function(x) TRUE, simplify = FALSE),
+                    reference_list = NULL,
                     reference_features_list = lapply(assay_list, rownames),
                     reference_scores_list = NULL,
                     ncomponentsReference = 50,
@@ -91,6 +94,14 @@ stabMap <- function(assay_list,
                     scale.scale = TRUE,
                     SE_assay_names = "logcounts") {
   # check various things and error if not:
+
+  if (is.null(reference_list)) {
+    reference_list <- as.list(vapply(
+      names(assay_list),
+      function(x) TRUE,
+      FUN.VALUE = logical(1)
+    ))
+  }
 
   se_idx <- unlist(
     lapply(assay_list, \(x) methods::is(x, "SummarizedExperiment"))
@@ -154,12 +165,18 @@ stabMap <- function(assay_list,
   ## reference_list should have names, if it's not a list, then it should be
   ## a character vector of the names of assay_list which should be included
   if (is.character(reference_list)) {
-    reference_list <- sapply(names(assay_list), function(x) x %in% reference_list, simplify = FALSE)
+    reference_list <- as.list(vapply(
+      names(assay_list),
+      function(x) x %in% reference_list,
+      FUN.VALUE = logical(1)
+    ))
   }
 
   # if ncomponentsReference given as integer convert to a list
   if (is.numeric(ncomponentsReference)) {
-    ncomponentsReference <- as.list(rep(ncomponentsReference, length(reference_list)))
+    ncomponentsReference <- as.list(
+      rep(ncomponentsReference, length(reference_list))
+    )
     names(ncomponentsReference) <- names(reference_list)
   }
 
@@ -177,7 +194,10 @@ stabMap <- function(assay_list,
   ## check whether the network is a connected component
   ## the number of components should be 1:
   if (igraph::components(assay_network)$no != 1) {
-    stop("feature network is not connected, features must overlap in some way via rownames")
+    stop(
+      "feature network is not connected, features must overlap in some way via",
+      " rownames"
+    )
   }
 
   ## if needed, scale the data
@@ -198,11 +218,17 @@ stabMap <- function(assay_list,
     ## if not a reference go next
     if (!reference_list[[reference_dataset]]) next
 
-    message(paste0("treating \"", reference_dataset, "\" as reference"))
+    m <- paste0("treating \"", reference_dataset, "\" as reference")
+    message(m)
 
     ## when the graph has a weight, then by default it will use them
     # shortest path is weighted by the number of shared features
-    to_nodes <- names(sort(igraph::distances(assay_network, to = reference_dataset)[, reference_dataset]))
+    to_nodes <- names(
+      sort(igraph::distances(
+        assay_network,
+        to = reference_dataset
+      )[, reference_dataset])
+    )
     all_paths <- lapply(igraph::all_shortest_paths(assay_network,
       from = reference_dataset
     )$res, names)
@@ -210,7 +236,10 @@ stabMap <- function(assay_list,
     all_paths <- all_paths[to_nodes]
 
     ## the PC space of the reference dataset
-    nPC <- min(ncomponentsReference[[reference_dataset]], nrow(assay_list[[reference_dataset]]))
+    nPC <- min(
+      ncomponentsReference[[reference_dataset]],
+      nrow(assay_list[[reference_dataset]])
+    )
 
     for (projectionType in c("PC", "LD")) {
       if (projectionType %in% "PC") {
@@ -220,7 +249,10 @@ stabMap <- function(assay_list,
           restrictFeatures <- FALSE
         } else {
           reference_scores_raw <- sm(
-            scater::calculatePCA(assay_list[[reference_dataset]][reference_features_list[[reference_dataset]], ],
+            scater::calculatePCA(
+              assay_list[[reference_dataset]][
+                reference_features_list[[reference_dataset]],
+              ],
               ncomponents = nPC,
               scale = FALSE
             )
@@ -236,11 +268,15 @@ stabMap <- function(assay_list,
 
           loadings_reference <- attr(reference_scores_raw, "rotation")
 
-          reference_scores <- as.matrix(t(assay_list[[reference_dataset]])) %*1% loadings_reference
+          reference_scores <- as.matrix(
+            t(assay_list[[reference_dataset]])
+          ) %*1% loadings_reference
         }
 
         d_nPC <- diag(nPC)
-        colnames(d_nPC) <- paste0(reference_dataset, "_", colnames(reference_scores))
+        colnames(d_nPC) <- paste0(
+          reference_dataset, "_", colnames(reference_scores)
+        )
 
         P_0 <- d_nPC
       }
@@ -250,7 +286,12 @@ stabMap <- function(assay_list,
 
         if (is.null(labels_list[[reference_dataset]])) next
 
-        message(paste0("labels provided for \"", reference_dataset, "\", adding LD components"))
+        m <- paste0(
+          "labels provided for \"",
+          reference_dataset,
+          "\", adding LD components"
+        )
+        message(m)
 
         features <- Reduce(intersect, lapply(assay_list, rownames))
         if (length(features) == 0) {
@@ -258,7 +299,10 @@ stabMap <- function(assay_list,
         }
 
         if (length(features) > maxFeatures) {
-          message("more input features than maxFeatures, subsetting features using variance ranking")
+          message(
+            "more input features than maxFeatures, subsetting features using",
+            " variance ranking"
+          )
           genevars <- scran::modelGeneVar(
             assay_list[[reference_dataset]][features, ]
           )
@@ -269,10 +313,17 @@ stabMap <- function(assay_list,
         labels_train <- labels_list[[reference_dataset]]
 
         ## remove features with zero variance for LDA
-        vars <- MatrixGenerics::rowMaxs(apply(Matrix::fac2sparse(labels_train), 1, function(x) {
-          MatrixGenerics::rowWeightedVars(assay_list[[reference_dataset]][features, ], x)
-        }), na.rm = TRUE)
-        if (any(vars == 0)) message("removing features with zero intra-class variance")
+        vars <- MatrixGenerics::rowMaxs(
+          apply(Matrix::fac2sparse(labels_train), 1, function(x) {
+            MatrixGenerics::rowWeightedVars(
+              assay_list[[reference_dataset]][features, ], x
+            )
+          }),
+          na.rm = TRUE
+        )
+        if (any(vars == 0)) {
+          message("removing features with zero intra-class variance")
+        }
         features <- features[vars > 0]
 
         data_train <- t(assay_list[[reference_dataset]][features, ])
@@ -280,9 +331,13 @@ stabMap <- function(assay_list,
         lda.fit <- sm(MASS::lda(data_train[!is.na(labels_train), ],
           grouping = labels_train[!is.na(labels_train)]
         ))
-        colnames(lda.fit$scaling) <- paste0(reference_dataset, "_", colnames(lda.fit$scaling))
+        colnames(lda.fit$scaling) <- paste0(
+          reference_dataset, "_", colnames(lda.fit$scaling)
+        )
 
-        reference_scores <- t(assay_list[[reference_dataset]][features, ]) %projpred% lda.fit
+        reference_scores <- t(
+          assay_list[[reference_dataset]][features, ]
+        ) %projpred% lda.fit
 
         d_nLD <- diag(ncol(reference_scores))
         colnames(d_nLD) <- colnames(reference_scores)
@@ -314,28 +369,44 @@ stabMap <- function(assay_list,
         ops <- list("%projpred%")
 
         while (length(path_current) > 1) {
-          features_current <- Reduce(intersect, lapply(assay_list[path_current[1:2]], rownames))
+          features_current <- Reduce(
+            intersect, lapply(assay_list[path_current[1:2]], rownames)
+          )
           if (path_current[1] == reference_dataset) {
             current_scores <- as.matrix(reference_scores)
-            # edit by shila to replace by intersecting among the loadings features when nearest the reference
-            if (projectionType == "PC" & restrictFeatures) {
-              features_current <- intersect(rownames(loadings_reference[[1]]), rownames(assay_list[[path_current[2]]]))
+            # edit by shila to replace by intersecting among the loadings
+            # features when nearest the reference
+            if (projectionType == "PC" && restrictFeatures) {
+              features_current <- intersect(
+                rownames(loadings_reference[[1]]),
+                rownames(assay_list[[path_current[2]]])
+              )
               if (length(features_current) == 0) {
-                message("No common features when using restrictFeatures, switching to intersection")
-                features_current <- Reduce(intersect, lapply(assay_list[path_current[1:2]], rownames))
+                message(
+                  "No common features when using restrictFeatures, switching",
+                  " to intersection"
+                )
+                features_current <- Reduce(
+                  intersect, lapply(assay_list[path_current[1:2]], rownames)
+                )
               }
             }
           } else {
             current_obj <- obj[[length(obj)]]
             if (is.list(current_obj)) current_obj <- current_obj[[1]]
             scores_features <- setdiff(rownames(current_obj), "intercept")
-            current_scores <- as.matrix(t(assay_list[[path_current[1]]][scores_features, ]))
+            current_scores <- as.matrix(
+              t(assay_list[[path_current[1]]][scores_features, ])
+            )
           }
 
           if (length(path_current) > 2) {
-            nPC_sub <- min(ncomponentsSubset[[reference_dataset]], length(features_current))
+            nPC_sub <- min(
+              ncomponentsSubset[[reference_dataset]], length(features_current)
+            )
 
-            dimred_current <- sm(scater::calculatePCA(assay_list[[path_current[1]]][features_current, ],
+            dimred_current <- sm(scater::calculatePCA(
+              assay_list[[path_current[1]]][features_current, ],
               ncomponents = nPC_sub,
               scale = FALSE
             ))
@@ -345,7 +416,10 @@ stabMap <- function(assay_list,
             )
             loadings_current <- attr(dimred_current, "rotation")
 
-            coef <- stats::lm.fit(cbind(intercept = 1, dimred_current), current_scores)$coefficients
+            coef <- stats::lm.fit(
+              cbind(intercept = 1, dimred_current),
+              current_scores
+            )$coefficients
             coef <- stats::na.omit(coef)
 
             obj[[length(obj) + 1]] <- coef
@@ -357,13 +431,20 @@ stabMap <- function(assay_list,
             ## if there are more than maxFeatures in features_current,
             ## then restrict to HVGs
             if (length(features_current) > maxFeatures) {
-              message("more input features than maxFeatures, subsetting features using variance ranking")
+              message(
+                "more input features than maxFeatures, subsetting features",
+                " using variance ranking"
+              )
 
               genevars <- scran::modelGeneVar(
                 assay_list[[path_current[1]]][features_current, ]
               )
-              genevars_sorted <- genevars[order(genevars$bio, decreasing = TRUE), ]
-              features_current <- rownames(genevars_sorted)[seq_len(maxFeatures)]
+              genevars_sorted <- genevars[
+                order(genevars$bio, decreasing = TRUE),
+              ]
+              features_current <- rownames(
+                genevars_sorted
+              )[seq_len(maxFeatures)]
             }
 
             coef <- stats::lm.fit(
@@ -378,7 +459,8 @@ stabMap <- function(assay_list,
             ops <- c("%*1%", ops)
           }
           ## if length(path_current) == 2 then this is the last step,
-          ## i.e. can use all genes in the remaining assay for coefficient estimation
+          ## i.e. can use all genes in the remaining assay for coefficient
+          ## estimation
           path_previous <- path_current[1]
           path_current <- path_current[-1]
         }
@@ -388,18 +470,26 @@ stabMap <- function(assay_list,
         if (length(obj) - length(ops) != 1) {
           ops <- c("%**%", ops)
         }
-        embedding_list[[path_current]] <- .runOps(rev(obj), ops, leftToRight = FALSE)
+        embedding_list[[path_current]] <- .runOps(
+          rev(obj), ops,
+          leftToRight = FALSE
+        )
 
         ## also project the prior data too
         if (projectAll) {
           obj[[length(obj)]] <- t(assay_list[[path_previous]])
 
-          embedding_list[[path_previous]] <- .runOps(rev(obj), ops, leftToRight = FALSE)
+          embedding_list[[path_previous]] <- .runOps(
+            rev(obj), ops,
+            leftToRight = FALSE
+          )
 
           for (path_previous_previous in path) {
             if (path_previous_previous == path_previous) break
 
-            features_previous_previous <- rownames(assay_list[[path_previous_previous]])
+            features_previous_previous <- rownames(
+              assay_list[[path_previous_previous]]
+            )
 
             previous_previous_ind <- max(which(unlist(lapply(obj, function(x) {
               if (is.list(x)) {
@@ -408,13 +498,20 @@ stabMap <- function(assay_list,
               any(features_previous_previous %in% rownames(x))
             }))))
 
-            obj_previous_previous <- obj[1:previous_previous_ind]
-            ops_previous_previous <- rev(rev(ops)[1:(length(obj_previous_previous) - 1)])
+            obj_previous_previous <- obj[seq_len(previous_previous_ind)]
+            ops_previous_previous <- rev(
+              rev(ops)[1:(length(obj_previous_previous) - 1)]
+            )
 
-            obj_previous_previous[[length(obj_previous_previous) + 1]] <- t(assay_list[[path_previous_previous]])
+            obj_previous_previous[[length(obj_previous_previous) + 1]] <- t(
+              assay_list[[path_previous_previous]]
+            )
             ops_previous_previous <- c("%**%", ops_previous_previous)
 
-            embedding_list[[path_previous_previous]] <- .runOps(rev(obj_previous_previous), ops_previous_previous, leftToRight = FALSE)
+            embedding_list[[path_previous_previous]] <- .runOps(
+              rev(obj_previous_previous), ops_previous_previous,
+              leftToRight = FALSE
+            )
           }
         }
       }
@@ -424,13 +521,17 @@ stabMap <- function(assay_list,
       ## re-centre the embedding
       embedding <- t(t(embedding) - colMeans(embedding))
 
-      all_embeddings_list[[paste0(reference_dataset, "_", projectionType)]] <- embedding
+      all_embeddings_list[[
+        paste0(reference_dataset, "_", projectionType)
+      ]] <- embedding
     }
   }
 
   all_cells <- rownames(all_embeddings_list[[1]])
 
-  all_embeddings <- do.call(cbind, lapply(all_embeddings_list, "[", all_cells, ))
+  all_embeddings <- do.call(
+    cbind, lapply(all_embeddings_list, "[", all_cells, )
+  )
 
   return(all_embeddings)
 }

@@ -64,7 +64,9 @@ adaptiveKNN <- function(knn,
   # labels = factor(rep(letters[1:2], each = 10))
   # k_local = getAdaptiveK(A, labels = labels)
   # data_2 = matrix(rpois(10*30, 10), 10, 30) # 10 genes, 30 cells
-  # knn = BiocNeighbors::queryKNN(t(data), t(data_2), k = 5, get.distance = FALSE)$index
+  # knn = BiocNeighbors::queryKNN(
+  #   t(data), t(data_2), k = 5, get.distance = FALSE
+  # )$index
   # class = labels
 
   # if (length(k_local) == 1) {
@@ -77,16 +79,22 @@ adaptiveKNN <- function(knn,
   query_best_k <- getQueryK(knn, k_local)
 
   if (any(query_best_k > ncol(knn))) {
-    warning("k is larger than nearest neighbours provided, taking all neighbours given")
+    warning(
+      "k is larger than nearest neighbours provided, ",
+      "taking all neighbours given"
+    )
   }
 
   # convert the KNN names to the class labels
   knn_class <- vectorSubset(class, knn)
 
   # extract the most frequent among the nearest local best k neighbours
-  # new_class = sapply(1:nrow(knn), function(i) getModeFirst(knn_class[i,], query_best_k[i]))
+  # new_class = sapply(
+  #   1:nrow(knn), function(i) getModeFirst(knn_class[i,], query_best_k[i])
+  # )
   # same as:
-  new_class <- mapply(getModeFirst, split(knn_class, seq_len(nrow(knn_class))), query_best_k,
+  new_class <- mapply(
+    getModeFirst, split(knn_class, seq_len(nrow(knn_class))), query_best_k,
     USE.NAMES = FALSE
   )
   names(new_class) <- rownames(knn_class)

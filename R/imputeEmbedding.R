@@ -49,7 +49,9 @@ imputeEmbedding <- function(assay_list,
   # combining function: mean by default
   # default behaviour is to output a smoothed assay_list object
 
-  has_reference <- lapply(assay_list, function(x) any(reference %in% colnames(x)))
+  has_reference <- lapply(
+    assay_list, function(x) any(reference %in% colnames(x))
+  )
 
   imputed_list <- list()
 
@@ -60,19 +62,21 @@ imputeEmbedding <- function(assay_list,
 
     referenceCells <- intersect(reference, colnames(assayMat))
 
-    knn_out <- queryNamedKNN(embedding[referenceCells, ], embedding[query, ], neighbours)
+    knn_out <- queryNamedKNN(
+      embedding[referenceCells, ], embedding[query, ], neighbours
+    )
 
     imputedList <- apply(knn_out, 2, function(knnval) {
       assayMat[, knnval]
     }, simplify = FALSE)
 
     if (!methods::is(imputedList[[1]], "matrix")) {
-      # message("only simple (non-sparse) matrix data currently supported, converting to dense matrix")
-      # imputedArray = abind(lapply(imputedList, as.matrix), along = 3)
       imputedArray <- slam::as.simple_sparse_array(do.call(cbind, imputedList))
       dim(imputedArray) <- c(dim(imputedList[[1]]), length(imputedList))
 
-      imputedMeans <- slam::drop_simple_sparse_array(slam::rollup(imputedArray, 3, NULL, fun))
+      imputedMeans <- slam::drop_simple_sparse_array(
+        slam::rollup(imputedArray, 3, NULL, fun)
+      )
       imputedMeans <- methods::as(
         methods::as(methods::as(
           methods::as(
@@ -84,7 +88,7 @@ imputeEmbedding <- function(assay_list,
     } else {
       imputedArray <- abind::abind(imputedList, along = 3)
 
-      imputedMeans <- apply(imputedArray, 1:2, fun)
+      imputedMeans <- apply(imputedArray, seq_len(2), fun)
     }
 
     colnames(imputedMeans) <- rownames(knn_out)

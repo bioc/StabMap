@@ -36,7 +36,10 @@
     am <- stats::predict(b[[2]], newdata = a)$x
   }
   if (methods::is(b[[2]], "svm")) {
-    am <- attr(stats::predict(b[[2]], newdata = a, decision.values = TRUE), "decision.values")
+    am <- attr(
+      stats::predict(b[[2]], newdata = a, decision.values = TRUE),
+      "decision.values"
+    )
   }
 
   return(cbind(ab, am))

@@ -38,7 +38,10 @@
 #'
 #' # re-weight embedding for less contribution from LDs and equal contribution
 #' # from PCs of both references
-#' out_reweighted <- reWeightEmbedding(out, weights = c("D1_LD" = 0.5, "D1_PC" = 1, "D3_PC" = 1))
+#' out_reweighted <- reWeightEmbedding(
+#'   out,
+#'   weights = c("D1_LD" = 0.5, "D1_PC" = 1, "D3_PC" = 1)
+#' )
 #'
 #' # look at the new scale of each component and discriminant
 #' boxplot(out_reweighted, las = 2, outline = FALSE)
@@ -46,7 +49,8 @@
 #' @export
 reWeightEmbedding <- function(embedding, weights = NULL, factor = 1e6) {
   # embedding is a cells x dimensions matrix
-  # weights is an optional named list (names correspond to all before the underscore)
+  # weights is an optional named list (names correspond to all before the
+  # underscore)
   # for weighting each embedding component
   # factor is a multiplicative value to avoid tiny numbers
   cols <- as.character(interaction(gsub("_PC.*|_LD.*", "", colnames(embedding)),
@@ -56,9 +60,8 @@ reWeightEmbedding <- function(embedding, weights = NULL, factor = 1e6) {
 
   cols_split <- split(colnames(embedding), cols)
 
-  message(paste0(c("reweighting for references: ", names(cols_split)),
-    sep = " "
-  ))
+  m <- paste(c("reweighting for references: ", names(cols_split)))
+  message(m)
 
   if (is.null(weights)) {
     weights <- lapply(cols_split, function(x) 1)

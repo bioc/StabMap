@@ -11,12 +11,12 @@
 .runOps <- function(obj, ops, leftToRight = TRUE) {
   if (leftToRight) {
     out <- obj[[1]]
-    for (i in 1:length(ops)) {
+    for (i in seq_along(ops)) {
       out <- get(ops[[i]])(out, obj[[i + 1]])
     }
   } else {
     out <- obj[[length(obj)]]
-    for (i in length(ops):1) {
+    for (i in rev(seq_along(ops))) {
       out <- get(ops[[i]])(obj[[i]], out)
     }
   }

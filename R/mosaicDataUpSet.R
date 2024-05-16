@@ -48,7 +48,7 @@ mosaicDataUpSet <- function(assay_list, plot = FALSE, ...) {
   g$Sizes <- g0$Sizes
 
   if (plot) {
-    print(g)
+    show(g)
   }
   return(g)
 }

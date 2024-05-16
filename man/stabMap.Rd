@@ -7,7 +7,7 @@
 stabMap(
   assay_list,
   labels_list = NULL,
-  reference_list = sapply(names(assay_list), function(x) TRUE, simplify = FALSE),
+  reference_list = NULL,
   reference_features_list = lapply(assay_list, rownames),
   reference_scores_list = NULL,
   ncomponentsReference = 50,
@@ -29,15 +29,18 @@ stabMap(
 
 \item{reference_list}{Named list containing logical values whether the data
 matrix should be considered as a reference dataset, alternatively a
-character vector containing the names of the reference data matrices.}
+character vector containing the names of the reference data matrices. If
+NULL, defaults to:
+ sapply(names(assay_list), function(x) TRUE, simplify = FALSE)}
 
 \item{reference_features_list}{List of features to consider as reference data
 (default is all available features).}
 
-\item{reference_scores_list}{Named list of reference scores (default NULL). If
-provided, matrix of cells (rows with rownames given) and dimensions (columns
-with colnames given) are used as the reference low-dimensional embedding to
-target, as opposed to performing PCA or LDA on the input reference data.}
+\item{reference_scores_list}{Named list of reference scores (default NULL).
+If provided, matrix of cells (rows with rownames given) and dimensions
+(columns with colnames given) are used as the reference low-dimensional
+embedding to target, as opposed to performing PCA or LDA on the input
+reference data.}
 
 \item{ncomponentsReference}{Number of principal components for embedding
 reference data, given either as an integer or a named list for each

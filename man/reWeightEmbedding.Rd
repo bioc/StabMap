@@ -49,7 +49,10 @@ boxplot(out, las = 2, outline = FALSE)
 
 # re-weight embedding for less contribution from LDs and equal contribution
 # from PCs of both references
-out_reweighted <- reWeightEmbedding(out, weights = c("D1_LD" = 0.5, "D1_PC" = 1, "D3_PC" = 1))
+out_reweighted <- reWeightEmbedding(
+  out,
+  weights = c("D1_LD" = 0.5, "D1_PC" = 1, "D3_PC" = 1)
+)
 
 # look at the new scale of each component and discriminant
 boxplot(out_reweighted, las = 2, outline = FALSE)

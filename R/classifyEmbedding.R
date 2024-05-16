@@ -50,7 +50,10 @@
 #' names(labels) <- rownames(coords)[1:length(labels)]
 #'
 #' # Adaptive KNN classification
-#' knn_out <- classifyEmbedding(coords, labels, type = "uniform_fixed", k_values = 5)
+#' knn_out <- classifyEmbedding(
+#'   coords, labels,
+#'   type = "uniform_fixed", k_values = 5
+#' )
 #' table(knn_out$predicted_labels)
 #'
 #' @export
@@ -131,13 +134,19 @@ classifyEmbedding <- function(
   # for these density based choices, and select the best k's for them
 
   if (type == "adaptive_density") {
-    densityK_all <- getDensityK(coords, k_values = k_values, dist_maxK = adaptive_density_maxK)
+    densityK_all <- getDensityK(
+      coords,
+      k_values = k_values, dist_maxK = adaptive_density_maxK
+    )
 
     max_k <- max(unlist(densityK_all), na.rm = TRUE)
 
     knn <- queryNamedKNN(coords_train, coords_train, k = max_k)
 
-    densityK_pred <- mapply(adaptiveKNN, densityK_all, MoreArgs = list(class = labels, knn = knn))
+    densityK_pred <- mapply(
+      adaptiveKNN, densityK_all,
+      MoreArgs = list(class = labels, knn = knn)
+    )
 
     E <- getBinaryErrorFromPredictions(densityK_pred, labels)
 
@@ -161,10 +170,10 @@ classifyEmbedding <- function(
       prob = rep(1, adaptive_nFold), replace = TRUE
     )
 
-    if (verbose) print(paste("Rep", Rep, "of", adaptive_nRep))
+    if (verbose) message("Rep ", Rep, " of ", adaptive_nRep)
 
     for (fold in seq_len(adaptive_nFold)) {
-      if (verbose) print(paste("Fold", fold, "of", adaptive_nFold))
+      if (verbose) message("Fold ", fold, " of ", adaptive_nFold)
 
       coords_train_k <- coords_train[train_k == fold, ]
       coords_test_k <- coords_train[!train_k == fold, ]
@@ -219,17 +228,25 @@ classifyEmbedding <- function(
       local = local,
       outputPerCell = TRUE
     )
-    best_k_local_unsmoothed <- vectorSubset(k_values, as.matrix(best_k_local_index))[, 1]
+    best_k_local_unsmoothed <- vectorSubset(
+      k_values, as.matrix(best_k_local_index)
+    )[, 1]
 
     if (any(is.na(best_k_local_unsmoothed))) {
       defined <- names(best_k_local_unsmoothed)[!is.na(best_k_local_unsmoothed)]
 
-      local_defined <- queryNamedKNN(coords_train[defined, ], coords_train, k = adaptive_local_nhood)
+      local_defined <- queryNamedKNN(
+        coords_train[defined, ], coords_train,
+        k = adaptive_local_nhood
+      )
     } else {
       local_defined <- local
     }
 
-    best_k_local <- smoothLocal(best_k_local_unsmoothed, local_defined, smooth = adaptive_local_smooth)
+    best_k_local <- smoothLocal(
+      best_k_local_unsmoothed, local_defined,
+      smooth = adaptive_local_smooth
+    )
 
     k_adaptive <- best_k_local[names(labels)]
   }
@@ -246,7 +263,10 @@ classifyEmbedding <- function(
     k_adaptive
   )
 
-  out <- buildLabelsDataFrame(labels, resubstituted_labels, k_adaptive = k_adaptive)
+  out <- buildLabelsDataFrame(
+    labels, resubstituted_labels,
+    k_adaptive = k_adaptive
+  )
 
   return(out)
 }

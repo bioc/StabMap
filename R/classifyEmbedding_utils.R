@@ -50,7 +50,7 @@ getModeFirst <- function(x, first) {
   # first is an integer
   # x = knn_class[1,]
   # first = query_best_k[i]
-  names(which.max(table(x[1:first])[unique(x[1:first])]))
+  names(which.max(table(x[seq_len(first)])[unique(x[seq_len(first)])]))
 }
 
 #' getQueryK
@@ -189,8 +189,13 @@ getBinaryError <- function(knn,
   # class_pred = adaptiveKNN(knn, class = class_train, k_local = k_values[1])
   # isEqual(class_pred, class_true)
 
-  class_pred <- mapply(adaptiveKNN, k_values, MoreArgs = list(class = class_train, knn = knn))
-  E <- methods::as(apply(class_pred, 2, isUnequal, y = class_true), "sparseMatrix")
+  class_pred <- mapply(
+    adaptiveKNN, k_values,
+    MoreArgs = list(class = class_train, knn = knn)
+  )
+  E <- methods::as(
+    apply(class_pred, 2, isUnequal, y = class_true), "sparseMatrix"
+  )
 
   rownames(E) <- names(class_true)
   colnames(E) <- names(k_values)
@@ -257,21 +262,34 @@ combineBinaryErrors <- function(E_list) {
 #'
 #' @keywords internal
 getDensityK <- function(coords, k_values = k_values, dist_maxK = 100) {
-  # coords is a cells (rows) x dimensions matrix for which distances should be calculated
+  # coords is a cells (rows) x dimensions matrix for which distances should be
+  # calculated
   # k_values is a numeric character of maximum k-values to use
-  # dist_maxK is the maximum distance to consider for estimating the local density
+  # dist_maxK is the maximum distance to consider for estimating the local
+  # density
 
-  # the output is a list of k-values based on the density for the possible values
+  # the output is a list of k-values based on the density for the possible
+  # values
 
-  dists <- BiocNeighbors::findKNN(coords, k = dist_maxK, get.distance = TRUE)$distance[, dist_maxK]
+  dists <- BiocNeighbors::findKNN(
+    coords,
+    k = dist_maxK, get.distance = TRUE
+  )$distance[, dist_maxK]
 
   k_norm_unscaled <- (1 / dists) / max(1 / dists)
 
   k_norm <- ceiling(outer(k_norm_unscaled, k_values))
   rownames(k_norm) <- rownames(coords)
 
-  # k_norm_split = split.data.frame(t(k_norm), 1:ncol(k_norm))
-  k_norm_split <- sapply(seq_len(ncol(k_norm)), function(i) k_norm[, i], simplify = FALSE)
+  k_norm_split <- sapply(
+    seq_len(ncol(k_norm)), function(i) k_norm[, i],
+    simplify = FALSE
+  )
+  # k_norm_split <- as.list(vapply(
+  #   seq_len(ncol(k_norm)),
+  #   function(i) k_norm[, i],
+  #   FUN.VALUE = integer(nrow(k_norm))
+  # ))
 
   return(k_norm_split)
 }
@@ -323,10 +341,14 @@ smoothLocal <- function(best_k, local, smooth = 10, mean_type = "geometric") {
   nms <- names(best_k)
 
   if (mean_type == "arithmetic") {
-    best_k_smooth <- ceiling(rowMeans(vectorSubset(best_k, local[, 1:smooth])))
+    best_k_smooth <- ceiling(
+      rowMeans(vectorSubset(best_k, local[, seq_len(smooth)]))
+    )
   }
   if (mean_type == "geometric") {
-    best_k_smooth <- ceiling(apply(vectorSubset(best_k, local[, 1:smooth]), 1, gm_mean))
+    best_k_smooth <- ceiling(
+      apply(vectorSubset(best_k, local[, seq_len(smooth)]), 1, gm_mean)
+    )
   }
   names(best_k_smooth) <- nms
   return(best_k_smooth)
@@ -408,7 +430,9 @@ getBinaryErrorFromPredictions <- function(pred, labels) {
 
   # output is a binary error matrix, sparse
 
-  E <- methods::as(apply(pred, 2, isUnequal, y = labels[rownames(pred)]), "sparseMatrix")
+  E <- methods::as(
+    apply(pred, 2, isUnequal, y = labels[rownames(pred)]), "sparseMatrix"
+  )
   rownames(E) <- names(labels)
   colnames(E) <- colnames(pred)
 

@@ -64,7 +64,10 @@ In this tutorial we will work with a multi-assay single cell dataset, consisting
 of ATAC and gene expression data for 10,032 cells. 
 
 ```{r, message=FALSE, warning=FALSE}
-mae <- scMultiome("pbmc_10x", mode = "*", dry.run = FALSE, format = "MTX", verbose = TRUE)
+mae <- scMultiome(
+  "pbmc_10x",
+  mode = "*", dry.run = FALSE, format = "MTX", verbose = TRUE
+)
 ```
 
 Perform some exploration of this data.
@@ -151,7 +154,9 @@ table(dataType)
 
 assay_list <- list(
   RNA = logcounts_all[assayType %in% c("rna"), dataType %in% c("RNA")],
-  Multiome = logcounts_all[assayType %in% c("rna", "atac"), dataType %in% c("Multiome")]
+  Multiome = logcounts_all[
+    assayType %in% c("rna", "atac"), dataType %in% c("Multiome")
+  ]
 )
 
 lapply(assay_list, dim)
@@ -267,7 +272,9 @@ extract cell type annotations for our reference dataset (Multiome).
 
 ```{r}
 annotation <- "celltype"
-referenceLabels <- colData(experiments(mae)[["rna"]])[colnames(assay_list$Multiome), annotation]
+referenceLabels <- colData(
+  experiments(mae)[["rna"]]
+)[colnames(assay_list$Multiome), annotation]
 names(referenceLabels) <- colnames(assay_list$Multiome)
 
 table(referenceLabels)
@@ -292,7 +299,9 @@ annotations use a measure such as accuracy.
 
 ```{r}
 # Extract query labels
-queryLabels <- colData(experiments(mae)[["rna"]])[colnames(assay_list$RNA), annotation]
+queryLabels <- colData(
+  experiments(mae)[["rna"]]
+)[colnames(assay_list$RNA), annotation]
 names(queryLabels) <- colnames(assay_list$RNA)
 
 acc <- mean(queryLabels == knn_out[names(queryLabels), "predicted_labels"])
@@ -357,8 +366,12 @@ table(dataTypeIndirect)
 
 assay_list_indirect <- list(
   RNA = logcounts_all[assayType %in% c("rna"), dataTypeIndirect %in% c("RNA")],
-  Multiome = logcounts_all[assayType %in% c("rna", "atac"), dataTypeIndirect %in% c("Multiome")],
-  ATAC = logcounts_all[assayType %in% c("atac"), dataTypeIndirect %in% c("ATAC")]
+  Multiome = logcounts_all[
+    assayType %in% c("rna", "atac"), dataTypeIndirect %in% c("Multiome")
+  ],
+  ATAC = logcounts_all[
+    assayType %in% c("atac"), dataTypeIndirect %in% c("ATAC")
+  ]
 )
 
 lapply(assay_list_indirect, dim)
