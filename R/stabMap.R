@@ -174,7 +174,9 @@ stabMap = function(assay_list,
   if (any(c(scale.center, scale.scale))) {
     assay_list <- lapply(
       assay_list,
-      function(x) t(scale(t(x), center = scale.center, scale = scale.scale))
+      function(x) BiocGenerics::t(
+        scale(BiocGenerics::t(x), center = scale.center, scale = scale.scale)
+      )
     )
   }
 
