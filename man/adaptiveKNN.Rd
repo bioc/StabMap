@@ -38,7 +38,7 @@ colnames(E) <- paste0("K_", 1:5)
 class <- factor(rep(letters[1:2], each = 10))
 k_local <- getAdaptiveK(E, labels = class)
 
-knn <- queryKNN(
+knn <- BiocNeighbors::queryKNN(
   t(data), t(data_2),
   k = max(as.numeric(gsub("K_", "", k_local)))
 )$index
