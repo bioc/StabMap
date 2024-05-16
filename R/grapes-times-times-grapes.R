@@ -12,7 +12,7 @@
 #' @return matrix
 #'
 #' @keywords internal
-"%**%" <- function(X,Y) {
+"%**%" <- function(X, Y) {
   # multiply two matrices but first reorder rows of the
   # second matrix
 
@@ -20,14 +20,14 @@
   # assumed given as second item
 
   if (is.list(Y)) {
-    rmeans = Y[[2]]
+    rmeans <- Y[[2]]
     Y <- Y[[1]]
   } else {
-    rmeans = rep(0, nrow(Y))
+    rmeans <- rep(0, nrow(Y))
     names(rmeans) <- rownames(Y)
   }
 
-  features = intersect(colnames(X), rownames(Y))
-  XY = (X[,features] - rmeans[features]) %*% Y[features,]
+  features <- intersect(colnames(X), rownames(Y))
+  XY <- (X[, features] - rmeans[features]) %*% Y[features, ]
   return(XY)
 }

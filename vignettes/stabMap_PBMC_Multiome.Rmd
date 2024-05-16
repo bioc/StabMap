@@ -93,11 +93,11 @@ sce.rna <- logNormCounts(sce.rna)
 
 # Feature selection
 decomp <- modelGeneVar(sce.rna)
-hvgs <- rownames(decomp)[decomp$mean>0.01 & decomp$p.value <= 0.05]
+hvgs <- rownames(decomp)[decomp$mean > 0.01 & decomp$p.value <= 0.05]
 
 length(hvgs)
 
-sce.rna <- sce.rna[hvgs,]
+sce.rna <- sce.rna[hvgs, ]
 ```
 
 Keep the first 2,000 cells only. Normalise and select variable features for the ATAC modality.
@@ -113,21 +113,22 @@ sce.atac <- logNormCounts(sce.atac)
 # Feature selection using highly variable peaks
 # And adding matching peaks to genes
 decomp <- modelGeneVar(sce.atac)
-hvgs <- rownames(decomp)[decomp$mean>0.25
-                         & decomp$p.value <= 0.05]
+hvgs <- rownames(decomp)[decomp$mean > 0.25 &
+  decomp$p.value <= 0.05]
 length(hvgs)
 
-sce.atac <- sce.atac[hvgs,]
+sce.atac <- sce.atac[hvgs, ]
 ```
 
 Create a composite full data matrix by concatenating.
 
 ```{r}
-logcounts_all = rbind(logcounts(sce.rna), logcounts(sce.atac))
+logcounts_all <- rbind(logcounts(sce.rna), logcounts(sce.atac))
 dim(logcounts_all)
 
-assayType = ifelse(rownames(logcounts_all) %in% rownames(sce.rna),
-                   "rna", "atac")
+assayType <- ifelse(rownames(logcounts_all) %in% rownames(sce.rna),
+  "rna", "atac"
+)
 table(assayType)
 ```
 
@@ -140,12 +141,15 @@ the cells using all data, and to impute the missing ATAC cell values from the RN
 modality cells.
 
 ```{r}
-dataType = setNames(sample(c("RNA", "Multiome"), ncol(logcounts_all),
-                           prob = c(0.5,0.5), replace = TRUE),
-                    colnames(logcounts_all))
+dataType <- setNames(
+  sample(c("RNA", "Multiome"), ncol(logcounts_all),
+    prob = c(0.5, 0.5), replace = TRUE
+  ),
+  colnames(logcounts_all)
+)
 table(dataType)
 
-assay_list = list(
+assay_list <- list(
   RNA = logcounts_all[assayType %in% c("rna"), dataType %in% c("RNA")],
   Multiome = logcounts_all[assayType %in% c("rna", "atac"), dataType %in% c("Multiome")]
 )
@@ -170,7 +174,7 @@ The `mosaicDataTopology()` is a weighted network where nodes represent each
 dataset, and edges connect nodes with at least one overlapping feature.   
 
 ```{r}
-mdt = mosaicDataTopology(assay_list)
+mdt <- mosaicDataTopology(assay_list)
 mdt
 plot(mdt)
 ```
@@ -204,17 +208,18 @@ Since the Multiome data contains all features, we treat this as the reference da
 Since we already examined the mosaic data topology, we set `plot = FALSE`.
 
 ```{r}
-stab = stabMap(assay_list,
-               reference_list = c("Multiome"),
-               plot = FALSE)
+stab <- stabMap(assay_list,
+  reference_list = c("Multiome"),
+  plot = FALSE
+)
 dim(stab)
-stab[1:5,1:5]
+stab[1:5, 1:5]
 ```
 
 We can reduce the dimension further using non-linear approaches such as UMAP.
 
 ```{r}
-stab_umap = calculateUMAP(t(stab))
+stab_umap <- calculateUMAP(t(stab))
 dim(stab_umap)
 
 plot(stab_umap, pch = 16, cex = 0.3, col = factor(dataType[rownames(stab)]))
@@ -234,17 +239,18 @@ from `stabMap()`. We set the Multiome cells as reference and the RNA cells as
 query. This is useful for downstream visualisation or further interpretation.
 
 ```{r}
-imp = imputeEmbedding(
+imp <- imputeEmbedding(
   assay_list,
   stab,
   reference = colnames(assay_list[["Multiome"]]),
-  query = colnames(assay_list[["RNA"]]))
+  query = colnames(assay_list[["RNA"]])
+)
 
 class(imp)
 names(imp)
 lapply(imp, dim)
 lapply(assay_list, dim)
-imp[["Multiome"]][1:5,1:5]
+imp[["Multiome"]][1:5, 1:5]
 ```
 
 # Annotating Query Datasets using the StabMap embedding
@@ -260,9 +266,9 @@ contain cell type annotations for each cell in the `celltype` column. We first
 extract cell type annotations for our reference dataset (Multiome). 
 
 ```{r}
-annotation = "celltype"
-referenceLabels = colData(experiments(mae)[["rna"]])[colnames(assay_list$Multiome), annotation]
-names(referenceLabels) = colnames(assay_list$Multiome)
+annotation <- "celltype"
+referenceLabels <- colData(experiments(mae)[["rna"]])[colnames(assay_list$Multiome), annotation]
+names(referenceLabels) <- colnames(assay_list$Multiome)
 
 table(referenceLabels)
 ```
@@ -274,7 +280,7 @@ To classify query cells based on a reference dataset we can use the
 labels in the `predicted_labels` column. 
 
 ```{r}
-knn_out = classifyEmbedding(
+knn_out <- classifyEmbedding(
   stab,
   referenceLabels,
 )
@@ -286,10 +292,10 @@ annotations use a measure such as accuracy.
 
 ```{r}
 # Extract query labels
-queryLabels = colData(experiments(mae)[["rna"]])[colnames(assay_list$RNA), annotation]
-names(queryLabels) = colnames(assay_list$RNA)
+queryLabels <- colData(experiments(mae)[["rna"]])[colnames(assay_list$RNA), annotation]
+names(queryLabels) <- colnames(assay_list$RNA)
 
-acc = mean(queryLabels == knn_out[names(queryLabels), "predicted_labels"])
+acc <- mean(queryLabels == knn_out[names(queryLabels), "predicted_labels"])
 acc
 ```
 
@@ -299,36 +305,36 @@ UMAP visualisation colour coded by their cell types.
 
 ```{r}
 # Extract reference and query cells from UMAP embedding
-stab_umap_ref = stab_umap[colnames(assay_list$Multiome),]
-stab_umap_query = stab_umap[colnames(assay_list$RNA),]
+stab_umap_ref <- stab_umap[colnames(assay_list$Multiome), ]
+stab_umap_query <- stab_umap[colnames(assay_list$RNA), ]
 
 # Create UMAP for reference cells
-df_umap_ref = data.frame(
-  x = stab_umap_ref[,1],
-  y = stab_umap_ref[,2],
+df_umap_ref <- data.frame(
+  x = stab_umap_ref[, 1],
+  y = stab_umap_ref[, 2],
   cell_type = referenceLabels[rownames(stab_umap_ref)]
 )
 
-p_ref = df_umap_ref %>% 
-  ggplot() + 
-  aes(x = x, y = y, colour = cell_type) + 
+p_ref <- df_umap_ref %>%
+  ggplot() +
+  aes(x = x, y = y, colour = cell_type) +
   geom_point(size = 1) +
   ggtitle("Reference cell type annotation")
 
 # Create UMAP for query cells
-df_umap_query = data.frame(
-  x = stab_umap_query[,1],
-  y = stab_umap_query[,2],
+df_umap_query <- data.frame(
+  x = stab_umap_query[, 1],
+  y = stab_umap_query[, 2],
   cell_type = queryLabels[rownames(stab_umap_query)]
 )
 
-p_query = df_umap_query %>% 
-  ggplot() + 
-  aes(x = x, y = y, colour = cell_type) + 
+p_query <- df_umap_query %>%
+  ggplot() +
+  aes(x = x, y = y, colour = cell_type) +
   geom_point(size = 1) +
   ggtitle("Query predicted cell types")
 
-grid.arrange(p_ref, p_query, ncol=2)
+grid.arrange(p_ref, p_query, ncol = 2)
 ```
 
 # Indirect mosaic data integration with StabMap
@@ -341,12 +347,15 @@ paths contain information), then we can extract meaningful joint embeddings. To
 demonstrate this, we will simulate three data sources.
 
 ```{r}
-dataTypeIndirect = setNames(sample(c("RNA", "Multiome", "ATAC"), ncol(logcounts_all),
-                                   prob = c(0.3,0.3, 0.3), replace = TRUE),
-                            colnames(logcounts_all))
+dataTypeIndirect <- setNames(
+  sample(c("RNA", "Multiome", "ATAC"), ncol(logcounts_all),
+    prob = c(0.3, 0.3, 0.3), replace = TRUE
+  ),
+  colnames(logcounts_all)
+)
 table(dataTypeIndirect)
 
-assay_list_indirect = list(
+assay_list_indirect <- list(
   RNA = logcounts_all[assayType %in% c("rna"), dataTypeIndirect %in% c("RNA")],
   Multiome = logcounts_all[assayType %in% c("rna", "atac"), dataTypeIndirect %in% c("Multiome")],
   ATAC = logcounts_all[assayType %in% c("atac"), dataTypeIndirect %in% c("ATAC")]
@@ -371,7 +380,7 @@ We can understand the `mosaicDataTopology()` of these datasets, which
 generates an `igraph` object, which can be inspected and plotted.
 
 ```{r}
-mdt_indirect = mosaicDataTopology(assay_list_indirect)
+mdt_indirect <- mosaicDataTopology(assay_list_indirect)
 mdt_indirect
 plot(mdt_indirect)
 ```
@@ -387,21 +396,24 @@ dataset. Since we already examined the mosaic data topology, we set
 `plot = FALSE`.
 
 ```{r}
-stab_indirect = stabMap(assay_list_indirect,
-                        reference_list = c("Multiome"),
-                        plot = FALSE)
+stab_indirect <- stabMap(assay_list_indirect,
+  reference_list = c("Multiome"),
+  plot = FALSE
+)
 dim(stab_indirect)
-stab_indirect[1:5,1:5]
+stab_indirect[1:5, 1:5]
 ```
 
 We can reduce the dimension further using non-linear approaches such as UMAP.
 
 ```{r}
-stab_indirect_umap = calculateUMAP(t(stab_indirect))
+stab_indirect_umap <- calculateUMAP(t(stab_indirect))
 dim(stab_indirect_umap)
 
-plot(stab_indirect_umap, pch = 16, cex = 0.3,
-     col = factor(dataTypeIndirect[rownames(stab_indirect)]))
+plot(stab_indirect_umap,
+  pch = 16, cex = 0.3,
+  col = factor(dataTypeIndirect[rownames(stab_indirect)])
+)
 ```
 
 Here we see that the RNA, ATAC and Multiome cells are fairly well-mixed.
@@ -410,10 +422,12 @@ Colouring the cells by their original cell type, we can also see that the
 mosaic data integration is meaningful.
 
 ```{r}
-cellType = setNames(mae$celltype, colnames(mae[[1]]))
+cellType <- setNames(mae$celltype, colnames(mae[[1]]))
 
-plot(stab_indirect_umap, pch = 16, cex = 0.3,
-     col = factor(cellType[rownames(stab_indirect)]))
+plot(stab_indirect_umap,
+  pch = 16, cex = 0.3,
+  col = factor(cellType[rownames(stab_indirect)])
+)
 ```
 
 <details>

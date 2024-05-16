@@ -15,14 +15,13 @@
 stabMapSE <- function(SE_list,
                       assays = "logcounts",
                       args = list()) {
-
   if (length(assays) == 1) {
     assays <- stats::setNames(rep(assays, length(SE_list)), names(SE_list))
   }
 
   stopifnot(
     "SE_assay_names should have names corrisponding to the SE objects in assay_list" = setequal(names(SE_list), names(assays))
-    )
+  )
 
   assay_list <- mapply(
     SummarizedExperiment::assay,

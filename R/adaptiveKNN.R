@@ -34,10 +34,9 @@
 #' # test = adaptiveKNN(knn, class, as.numeric(gsub("K_", "", k_local)))
 #'
 #' @export
-adaptiveKNN = function(knn,
-                       class,
-                       k_local) {
-
+adaptiveKNN <- function(knn,
+                        class,
+                        k_local) {
   # knn is a k-nearest neighbour matrix, giving the
   # indices of the training set that the query is
   # closest to. Rows are the query cells, columns
@@ -70,20 +69,21 @@ adaptiveKNN = function(knn,
   # # first use 1NN to identify the local best k value
   # query_best_k = k_local[knn[,1]]
 
-  query_best_k = getQueryK(knn, k_local)
+  query_best_k <- getQueryK(knn, k_local)
 
   if (any(query_best_k > ncol(knn))) {
     warning("k is larger than nearest neighbours provided, taking all neighbours given")
   }
 
   # convert the KNN names to the class labels
-  knn_class = vectorSubset(class, knn)
+  knn_class <- vectorSubset(class, knn)
 
   # extract the most frequent among the nearest local best k neighbours
   # new_class = sapply(1:nrow(knn), function(i) getModeFirst(knn_class[i,], query_best_k[i]))
   # same as:
-  new_class = mapply(getModeFirst, split(knn_class, seq_len(nrow(knn_class))), query_best_k,
-                     USE.NAMES = FALSE)
+  new_class <- mapply(getModeFirst, split(knn_class, seq_len(nrow(knn_class))), query_best_k,
+    USE.NAMES = FALSE
+  )
   names(new_class) <- rownames(knn_class)
 
   return(new_class)

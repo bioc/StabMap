@@ -12,7 +12,7 @@
 #'
 #' @examples
 #' set.seed(2021)
-#' assay_list = mockMosaicData()
+#' assay_list <- mockMosaicData()
 #' lapply(assay_list, dim)
 #' mosaicDataUpSet(assay_list)
 #'
@@ -20,24 +20,31 @@
 #' mosaicDataUpSet(assay_list, empty.intersections = TRUE)
 #'
 #' @export
-mosaicDataUpSet = function(assay_list, plot = FALSE, ...) {
-
-  df = as.data.frame(1 * do.call(
+mosaicDataUpSet <- function(assay_list, plot = FALSE, ...) {
+  df <- as.data.frame(1 * do.call(
     cbind,
     lapply(
       assay_list,
-      function(x) Reduce(union, lapply(assay_list, rownames)) %in%
-        rownames(x))))
+      function(x) {
+        Reduce(union, lapply(assay_list, rownames)) %in%
+          rownames(x)
+      }
+    )
+  ))
 
-  df_cells =  as.data.frame(1 * do.call(
+  df_cells <- as.data.frame(1 * do.call(
     cbind, lapply(
       assay_list,
-      function(x) Reduce(union, lapply(assay_list, colnames)) %in%
-        colnames(x))))
+      function(x) {
+        Reduce(union, lapply(assay_list, colnames)) %in%
+          colnames(x)
+      }
+    )
+  ))
 
-  g <- UpSetR::upset(df,...)
+  g <- UpSetR::upset(df, ...)
 
-  g0 <- suppressMessages(UpSetR::upset(df_cells,...))
+  g0 <- suppressMessages(UpSetR::upset(df_cells, ...))
   g$Sizes <- g0$Sizes
 
   if (plot) {

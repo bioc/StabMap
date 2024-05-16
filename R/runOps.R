@@ -8,14 +8,14 @@
 #' @return matrix or array output of the sequence of binary operations
 #'
 #' @keywords internal
-.runOps = function(obj, ops, leftToRight = TRUE) {
+.runOps <- function(obj, ops, leftToRight = TRUE) {
   if (leftToRight) {
-    out = obj[[1]]
+    out <- obj[[1]]
     for (i in 1:length(ops)) {
-      out <- get(ops[[i]])(out, obj[[i+1]])
+      out <- get(ops[[i]])(out, obj[[i + 1]])
     }
   } else {
-    out = obj[[length(obj)]]
+    out <- obj[[length(obj)]]
     for (i in length(ops):1) {
       out <- get(ops[[i]])(obj[[i]], out)
     }

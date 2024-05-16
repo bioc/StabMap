@@ -13,8 +13,8 @@
 #' minimum values for each row of the matrix.
 #'
 #' @keywords internal
-getArgMin = function(M, return_colnames = TRUE, identicalNA = TRUE) {
-  m = max.col(-M, ties.method = "first")
+getArgMin <- function(M, return_colnames = TRUE, identicalNA = TRUE) {
+  m <- max.col(-M, ties.method = "first")
 
   if (return_colnames) {
     if (!is.null(colnames(M)[1])) {
@@ -27,7 +27,7 @@ getArgMin = function(M, return_colnames = TRUE, identicalNA = TRUE) {
   if (identicalNA) {
     # if all the values in a row of M are identical,
     # return NA
-    m[apply(M,1,allEqual)] <- NA
+    m[apply(M, 1, allEqual)] <- NA
   }
 
   return(m)
@@ -44,8 +44,7 @@ getArgMin = function(M, return_colnames = TRUE, identicalNA = TRUE) {
 #' @return A character of the mode of x.
 #'
 #' @keywords internal
-getModeFirst = function(x, first) {
-
+getModeFirst <- function(x, first) {
   # identify the mode of x among the first values
   # x is a character or a factor
   # first is an integer
@@ -70,9 +69,7 @@ getModeFirst = function(x, first) {
 #' @return An integer vector with local k to use for each query cell.
 #'
 #' @keywords internal
-getQueryK = function(knn, k_local) {
-
-
+getQueryK <- function(knn, k_local) {
   # knn is a k-nearest neighbour matrix, giving the
   # indices of the training set that the query is
   # closest to. Rows are the query cells, columns
@@ -90,7 +87,7 @@ getQueryK = function(knn, k_local) {
   }
 
   # Use 1NN to identify the local best k value
-  query_best_k = k_local[knn[,1]]
+  query_best_k <- k_local[knn[, 1]]
 
   return(query_best_k)
 }
@@ -106,10 +103,9 @@ getQueryK = function(knn, k_local) {
 #' @return An integer vector. 1 for unequal. 0 for equal
 #'
 #' @keywords internal
-isUnequal = function(x,y) {
-
+isUnequal <- function(x, y) {
   # returns an integer vector
-  1*(as.character(x) != as.character(y))
+  1 * (as.character(x) != as.character(y))
 }
 
 #' allEqual
@@ -121,8 +117,7 @@ isUnequal = function(x,y) {
 #' @return logical whether a a vector is equal to its first element.
 #'
 #' @keywords internal
-allEqual = function(x) {
-
+allEqual <- function(x) {
   all(x == x[1])
 }
 
@@ -145,12 +140,10 @@ allEqual = function(x) {
 #' @return A sparse binary error matrix.
 #'
 #' @keywords internal
-getBinaryError = function(knn,
-                          k_values,
-                          class_train,
-                          class_true) {
-
-
+getBinaryError <- function(knn,
+                           k_values,
+                           class_train,
+                           class_true) {
   # output is a sparse binary error matrix E
 
   # knn is a k-nearest neighbour matrix, giving the
@@ -196,8 +189,8 @@ getBinaryError = function(knn,
   # class_pred = adaptiveKNN(knn, class = class_train, k_local = k_values[1])
   # isEqual(class_pred, class_true)
 
-  class_pred = mapply(adaptiveKNN, k_values, MoreArgs = list(class = class_train, knn = knn))
-  E = methods::as(apply(class_pred, 2, isUnequal, y = class_true), "sparseMatrix")
+  class_pred <- mapply(adaptiveKNN, k_values, MoreArgs = list(class = class_train, knn = knn))
+  E <- methods::as(apply(class_pred, 2, isUnequal, y = class_true), "sparseMatrix")
 
   rownames(E) <- names(class_true)
   colnames(E) <- names(k_values)
@@ -216,8 +209,7 @@ getBinaryError = function(knn,
 #' @return A sparse error matrix.
 #'
 #' @keywords internal
-combineBinaryErrors = function(E_list) {
-
+combineBinaryErrors <- function(E_list) {
   # E_list is a list containing matrices
   # each matrix must have the same number of columns (k-values)
   # and contain rownames (cells)
@@ -237,15 +229,15 @@ combineBinaryErrors = function(E_list) {
     stop("each matrix in E_list must have associated rownames")
   }
 
-  all_rows = unlist(lapply(E_list, rownames))
+  all_rows <- unlist(lapply(E_list, rownames))
 
-  E_exp = do.call(rbind, E_list)
-  E_split = split.data.frame(E_exp, all_rows)
+  E_exp <- do.call(rbind, E_list)
+  E_split <- split.data.frame(E_exp, all_rows)
 
   # data becomes dense at this stage
-  E_means = lapply(E_split, colMeans, na.rm = TRUE)
+  E_means <- lapply(E_split, colMeans, na.rm = TRUE)
 
-  E = methods::as(do.call(rbind, E_means), "sparseMatrix")
+  E <- methods::as(do.call(rbind, E_means), "sparseMatrix")
 
   return(E)
 }
@@ -264,23 +256,22 @@ combineBinaryErrors = function(E_list) {
 #' @return A list.
 #'
 #' @keywords internal
-getDensityK = function(coords, k_values = k_values, dist_maxK = 100) {
-
+getDensityK <- function(coords, k_values = k_values, dist_maxK = 100) {
   # coords is a cells (rows) x dimensions matrix for which distances should be calculated
   # k_values is a numeric character of maximum k-values to use
   # dist_maxK is the maximum distance to consider for estimating the local density
 
   # the output is a list of k-values based on the density for the possible values
 
-  dists = BiocNeighbors::findKNN(coords, k = dist_maxK, get.distance = TRUE)$distance[,dist_maxK]
+  dists <- BiocNeighbors::findKNN(coords, k = dist_maxK, get.distance = TRUE)$distance[, dist_maxK]
 
-  k_norm_unscaled = (1/dists) / max(1/dists)
+  k_norm_unscaled <- (1 / dists) / max(1 / dists)
 
-  k_norm = ceiling(outer(k_norm_unscaled, k_values))
+  k_norm <- ceiling(outer(k_norm_unscaled, k_values))
   rownames(k_norm) <- rownames(coords)
 
   # k_norm_split = split.data.frame(t(k_norm), 1:ncol(k_norm))
-  k_norm_split = sapply(seq_len(ncol(k_norm)), function(i) k_norm[,i], simplify = FALSE)
+  k_norm_split <- sapply(seq_len(ncol(k_norm)), function(i) k_norm[, i], simplify = FALSE)
 
   return(k_norm_split)
 }
@@ -296,9 +287,8 @@ getDensityK = function(coords, k_values = k_values, dist_maxK = 100) {
 #' @return The index of the best performing column of E
 #'
 #' @keywords internal
-getBestColumn = function(E,
-                         balanced_labels = NULL) {
-
+getBestColumn <- function(E,
+                          balanced_labels = NULL) {
   # returns the index of the best performing column of E
   # if balanced_labels given then return the best
   # given the balanced accuracy, otherwise just total accuracy
@@ -306,7 +296,7 @@ getBestColumn = function(E,
   if (is.null(balanced_labels)) {
     return(which.min(colMeans(E, na.rm = TRUE)))
   } else {
-    E_lab = apply(E, 2, function(x) tapply(x, balanced_labels, mean))
+    E_lab <- apply(E, 2, function(x) tapply(x, balanced_labels, mean))
     return(which.min(colMeans(E_lab, na.rm = TRUE)))
   }
 }
@@ -327,17 +317,16 @@ getBestColumn = function(E,
 #' @return A numeric vector of smoothed adaptive k-values.
 #'
 #' @keywords internal
-smoothLocal = function(best_k, local, smooth = 10, mean_type = "geometric") {
-
+smoothLocal <- function(best_k, local, smooth = 10, mean_type = "geometric") {
   # best_k is a named vector of local best k values
   # local is a matrix with rows same as best_k and values indices of best_k
-  nms = names(best_k)
+  nms <- names(best_k)
 
   if (mean_type == "arithmetic") {
-    best_k_smooth = ceiling(rowMeans(vectorSubset(best_k, local[,1:smooth])))
+    best_k_smooth <- ceiling(rowMeans(vectorSubset(best_k, local[, 1:smooth])))
   }
   if (mean_type == "geometric") {
-    best_k_smooth = ceiling(apply(vectorSubset(best_k, local[,1:smooth]),1, gm_mean))
+    best_k_smooth <- ceiling(apply(vectorSubset(best_k, local[, 1:smooth]), 1, gm_mean))
   }
   names(best_k_smooth) <- nms
   return(best_k_smooth)
@@ -354,10 +343,11 @@ smoothLocal = function(best_k, local, smooth = 10, mean_type = "geometric") {
 #' @return A numeric.
 #'
 #' @keywords internal
-gm_mean = function(x, na.rm=TRUE){
-
-  if (all(is.na(x))) return(NA)
-  exp(sum(log(x[x > 0]), na.rm=na.rm) / sum(!is.na(x)))
+gm_mean <- function(x, na.rm = TRUE) {
+  if (all(is.na(x))) {
+    return(NA)
+  }
+  exp(sum(log(x[x > 0]), na.rm = na.rm) / sum(!is.na(x)))
 }
 
 #' buildLabelsDataFrame
@@ -374,8 +364,7 @@ gm_mean = function(x, na.rm=TRUE){
 #' for input_labels, predicted_labels, and resubstituted_labels.
 #'
 #' @keywords internal
-buildLabelsDataFrame = function(labels, resubstituted_labels, k_adaptive) {
-
+buildLabelsDataFrame <- function(labels, resubstituted_labels, k_adaptive) {
   # labels is a named character vector with true labels
   # resubstituted_labels is a named character vector with
   # extra labels
@@ -385,14 +374,16 @@ buildLabelsDataFrame = function(labels, resubstituted_labels, k_adaptive) {
   # output a dataframe with rows the same as resubstituted_labels
   # and columns for input_labels, predicted_labels, and resubstituted_labels
 
-  df = data.frame(input_labels = as.character(labels[names(resubstituted_labels)]),
-                  resubstituted_labels = as.character(resubstituted_labels),
-                  predicted_labels = as.character(resubstituted_labels),
-                  row.names = names(resubstituted_labels))
+  df <- data.frame(
+    input_labels = as.character(labels[names(resubstituted_labels)]),
+    resubstituted_labels = as.character(resubstituted_labels),
+    predicted_labels = as.character(resubstituted_labels),
+    row.names = names(resubstituted_labels)
+  )
   df[names(labels), "predicted_labels"] <- labels
 
   if (length(k_adaptive) == 1) {
-    df$k = k_adaptive
+    df$k <- k_adaptive
   } else {
     df$k <- k_adaptive[rownames(df)]
   }
@@ -410,15 +401,14 @@ buildLabelsDataFrame = function(labels, resubstituted_labels, k_adaptive) {
 #' @return A sparse binary error matrix.
 #'
 #' @keywords internal
-getBinaryErrorFromPredictions = function(pred, labels) {
-
+getBinaryErrorFromPredictions <- function(pred, labels) {
   # pred is a matrix of class label predictions
   # with named rows
   # labels is a named vector of true labels
 
   # output is a binary error matrix, sparse
 
-  E = methods::as(apply(pred, 2, isUnequal, y = labels[rownames(pred)]), "sparseMatrix")
+  E <- methods::as(apply(pred, 2, isUnequal, y = labels[rownames(pred)]), "sparseMatrix")
   rownames(E) <- names(labels)
   colnames(E) <- colnames(pred)
 
@@ -436,16 +426,16 @@ getBinaryErrorFromPredictions = function(pred, labels) {
 #' @return matrix
 #'
 #' @keywords internal
-queryNamedKNN = function(coords_reference, coords_query, k) {
+queryNamedKNN <- function(coords_reference, coords_query, k) {
   # used in imputeEmbedding()
 
-  knn = BiocNeighbors::queryKNN(
+  knn <- BiocNeighbors::queryKNN(
     coords_reference,
     coords_query,
-    k = k, get.distance = FALSE)$index
+    k = k, get.distance = FALSE
+  )$index
   rownames(knn) <- rownames(coords_query)
-  knn_name = vectorSubset(rownames(coords_reference), knn)
+  knn_name <- vectorSubset(rownames(coords_reference), knn)
 
   return(knn_name)
 }
-

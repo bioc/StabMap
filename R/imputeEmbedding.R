@@ -17,29 +17,29 @@
 #'
 #' @examples
 #' set.seed(2021)
-#' assay_list = mockMosaicData()
+#' assay_list <- mockMosaicData()
 #' lapply(assay_list, dim)
 #'
 #' # stabMap
-#' out = stabMap(assay_list,
-#'               ncomponentsReference = 20,
-#'               ncomponentsSubset = 20)
+#' out <- stabMap(assay_list,
+#'   ncomponentsReference = 20,
+#'   ncomponentsSubset = 20
+#' )
 #'
 #' # impute values
-#' imp = imputeEmbedding(assay_list, out)
+#' imp <- imputeEmbedding(assay_list, out)
 #'
 #' # inspect the imputed values
 #' lapply(imp, dim)
-#' imp[[1]][1:5,1:5]
+#' imp[[1]][1:5, 1:5]
 #'
 #' @export
-imputeEmbedding = function(assay_list,
-                           embedding,
-                           reference = Reduce(union, lapply(assay_list, colnames)),
-                           query = Reduce(union, lapply(assay_list, colnames)),
-                           neighbours = 5,
-                           fun = mean) {
-
+imputeEmbedding <- function(assay_list,
+                            embedding,
+                            reference = Reduce(union, lapply(assay_list, colnames)),
+                            query = Reduce(union, lapply(assay_list, colnames)),
+                            neighbours = 5,
+                            fun = mean) {
   # naive imputation given a (potentially batch corrected) StabMap embedding
   # input:
   # assay_list (typically the original input to StabMap)
@@ -49,42 +49,42 @@ imputeEmbedding = function(assay_list,
   # combining function: mean by default
   # default behaviour is to output a smoothed assay_list object
 
-  has_reference = lapply(assay_list, function(x) any(reference %in% colnames(x)))
+  has_reference <- lapply(assay_list, function(x) any(reference %in% colnames(x)))
 
-  imputed_list = list()
+  imputed_list <- list()
 
   for (assayName in names(assay_list)) {
-
     if (!has_reference[[assayName]]) next
 
-    assayMat = assay_list[[assayName]]
+    assayMat <- assay_list[[assayName]]
 
-    referenceCells = intersect(reference, colnames(assayMat))
+    referenceCells <- intersect(reference, colnames(assayMat))
 
-    knn_out = queryNamedKNN(embedding[referenceCells, ], embedding[query,], neighbours)
+    knn_out <- queryNamedKNN(embedding[referenceCells, ], embedding[query, ], neighbours)
 
-    imputedList = apply(knn_out, 2, function(knnval) {
-      assayMat[,knnval]
+    imputedList <- apply(knn_out, 2, function(knnval) {
+      assayMat[, knnval]
     }, simplify = FALSE)
 
     if (!methods::is(imputedList[[1]], "matrix")) {
-
       # message("only simple (non-sparse) matrix data currently supported, converting to dense matrix")
       # imputedArray = abind(lapply(imputedList, as.matrix), along = 3)
       imputedArray <- slam::as.simple_sparse_array(do.call(cbind, imputedList))
       dim(imputedArray) <- c(dim(imputedList[[1]]), length(imputedList))
 
-      imputedMeans = slam::drop_simple_sparse_array(slam::rollup(imputedArray, 3, NULL, fun))
-      imputedMeans = methods::as(methods::as(methods::as(
-        methods::as(
-          imputedMeans, "array"), "dMatrix"), "generalMatrix"),
+      imputedMeans <- slam::drop_simple_sparse_array(slam::rollup(imputedArray, 3, NULL, fun))
+      imputedMeans <- methods::as(
+        methods::as(methods::as(
+          methods::as(
+            imputedMeans, "array"
+          ), "dMatrix"
+        ), "generalMatrix"),
         "CsparseMatrix"
       )
     } else {
+      imputedArray <- abind::abind(imputedList, along = 3)
 
-       imputedArray = abind::abind(imputedList, along = 3)
-
-      imputedMeans = apply(imputedArray, 1:2, fun)
+      imputedMeans <- apply(imputedArray, 1:2, fun)
     }
 
     colnames(imputedMeans) <- rownames(knn_out)

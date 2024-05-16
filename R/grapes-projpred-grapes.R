@@ -22,8 +22,8 @@
   # object then just perform the prediction
 
   if (methods::is(b, "lda")) {
-    features = rownames(b$scaling)
-    am = stats::predict(b, newdata = a[,features])$x
+    features <- rownames(b$scaling)
+    am <- stats::predict(b, newdata = a[, features])$x
     return(am)
   }
 
@@ -31,14 +31,13 @@
     return(a %*% b)
   }
 
-  ab = a %*% b[[1]]
+  ab <- a %*% b[[1]]
   if (methods::is(b[[2]], "lda")) {
-    am = stats::predict(b[[2]], newdata = a)$x
+    am <- stats::predict(b[[2]], newdata = a)$x
   }
   if (methods::is(b[[2]], "svm")) {
-    am = attr(stats::predict(b[[2]], newdata = a, decision.values = TRUE), "decision.values")
+    am <- attr(stats::predict(b[[2]], newdata = a, decision.values = TRUE), "decision.values")
   }
 
-  return(cbind(ab,am))
-
+  return(cbind(ab, am))
 }

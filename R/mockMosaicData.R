@@ -15,29 +15,33 @@
 #'
 #' @examples
 #' set.seed(2021)
-#' assay_list = mockMosaicData()
+#' assay_list <- mockMosaicData()
 #' lapply(assay_list, dim)
 #'
 #' # simulate data from another distribution
-#' assay_list = mockMosaicData(fun = "rnbinom", size = 5, prob = 0.5)
+#' assay_list <- mockMosaicData(fun = "rnbinom", size = 5, prob = 0.5)
 #' lapply(assay_list, dim)
 #'
 #' @export
-mockMosaicData = function(names = c("D1", "D2", "D3"),
-                          ncells = c(50, 50, 50),
-                          ngenes = list(1:150,76:225,151:300),
-                          fun = "rnorm",
-                          ...) {
-
-  assay_list = mapply(function(name, ncell, ngene)
-    matrix(get(fun)(ncell*length(ngene), ...),
-           nrow = length(ngene),
-           ncol = ncell,
-           dimnames = list(
-             paste0("gene_", ngene),
-             paste0(name, "_cell_", seq_len(ncell))
-           )),
-    names, ncells, ngenes, SIMPLIFY = FALSE)
+mockMosaicData <- function(names = c("D1", "D2", "D3"),
+                           ncells = c(50, 50, 50),
+                           ngenes = list(1:150, 76:225, 151:300),
+                           fun = "rnorm",
+                           ...) {
+  assay_list <- mapply(
+    function(name, ncell, ngene) {
+      matrix(get(fun)(ncell * length(ngene), ...),
+        nrow = length(ngene),
+        ncol = ncell,
+        dimnames = list(
+          paste0("gene_", ngene),
+          paste0(name, "_cell_", seq_len(ncell))
+        )
+      )
+    },
+    names, ncells, ngenes,
+    SIMPLIFY = FALSE
+  )
 
   return(assay_list)
 }

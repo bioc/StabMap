@@ -42,19 +42,19 @@
 #'
 #' @examples
 #' # Simulate coordinates
-#' coords = matrix(rnorm(1000), 100, 10)
+#' coords <- matrix(rnorm(1000), 100, 10)
 #' rownames(coords) <- paste0("cell_", 1:nrow(coords))
 #'
 #' # Define labels of the first 50 cells
-#' labels = rep(paste0("type_", letters[1:5]), 10)
+#' labels <- rep(paste0("type_", letters[1:5]), 10)
 #' names(labels) <- rownames(coords)[1:length(labels)]
 #'
 #' # Adaptive KNN classification
-#' knn_out = classifyEmbedding(coords, labels, type = "uniform_fixed", k_values = 5)
+#' knn_out <- classifyEmbedding(coords, labels, type = "uniform_fixed", k_values = 5)
 #' table(knn_out$predicted_labels)
 #'
 #' @export
-classifyEmbedding = function(
+classifyEmbedding <- function(
     coords,
     labels,
     type = "uniform_fixed",
@@ -65,9 +65,7 @@ classifyEmbedding = function(
     adaptive_local_nhood = 100,
     adaptive_local_smooth = 10,
     adaptive_density_maxK = 100,
-    verbose = TRUE
-) {
-
+    verbose = TRUE) {
   # to-do:
   # the cross validation step can be parallelised
   # provide a priori values for adaptive k rather than need to calculate
@@ -107,20 +105,22 @@ classifyEmbedding = function(
     stop("labels must have names")
   }
 
-  max_k = max(k_values)
+  max_k <- max(k_values)
 
-  coords_train = coords[names(labels),]
+  coords_train <- coords[names(labels), ]
 
   if (type == "uniform_fixed") {
-    k = k_values[1]
+    k <- k_values[1]
 
-    knn = queryNamedKNN(coords_train, coords, k = k)
+    knn <- queryNamedKNN(coords_train, coords, k = k)
 
-    resubstituted_labels = adaptiveKNN(knn,
-                                       labels,
-                                       k)
+    resubstituted_labels <- adaptiveKNN(
+      knn,
+      labels,
+      k
+    )
 
-    out = buildLabelsDataFrame(labels, resubstituted_labels, k_adaptive = k)
+    out <- buildLabelsDataFrame(labels, resubstituted_labels, k_adaptive = k)
 
     return(out)
   }
@@ -131,124 +131,122 @@ classifyEmbedding = function(
   # for these density based choices, and select the best k's for them
 
   if (type == "adaptive_density") {
+    densityK_all <- getDensityK(coords, k_values = k_values, dist_maxK = adaptive_density_maxK)
 
-    densityK_all = getDensityK(coords, k_values = k_values, dist_maxK = adaptive_density_maxK)
+    max_k <- max(unlist(densityK_all), na.rm = TRUE)
 
-    max_k = max(unlist(densityK_all), na.rm = TRUE)
+    knn <- queryNamedKNN(coords_train, coords_train, k = max_k)
 
-    knn = queryNamedKNN(coords_train, coords_train, k = max_k)
+    densityK_pred <- mapply(adaptiveKNN, densityK_all, MoreArgs = list(class = labels, knn = knn))
 
-    densityK_pred = mapply(adaptiveKNN, densityK_all, MoreArgs = list(class = labels, knn = knn))
-
-    E = getBinaryErrorFromPredictions(densityK_pred, labels)
+    E <- getBinaryErrorFromPredictions(densityK_pred, labels)
 
     # select the best column based on the error type
     if (error_measure == "simple_error") {
-      best_column = getBestColumn(E)
+      best_column <- getBestColumn(E)
     }
     if (error_measure == "balanced_error") {
-      best_column = getBestColumn(E, balanced_labels = labels[rownames(E)])
+      best_column <- getBestColumn(E, balanced_labels = labels[rownames(E)])
     }
-    k_adaptive = densityK_all[[best_column]]
-
+    k_adaptive <- densityK_all[[best_column]]
   }
 
   # if neither of above types are chosen, then an error matrix
   # is needed, using internal cross-validation
 
-  E_list = list()
+  E_list <- list()
 
   for (Rep in seq_len(adaptive_nRep)) {
-
-    train_k = sample(seq_len(adaptive_nFold), nrow(coords_train),
-                     prob = rep(1,adaptive_nFold), replace = TRUE)
+    train_k <- sample(seq_len(adaptive_nFold), nrow(coords_train),
+      prob = rep(1, adaptive_nFold), replace = TRUE
+    )
 
     if (verbose) print(paste("Rep", Rep, "of", adaptive_nRep))
 
     for (fold in seq_len(adaptive_nFold)) {
-
       if (verbose) print(paste("Fold", fold, "of", adaptive_nFold))
 
-      coords_train_k = coords_train[train_k == fold,]
-      coords_test_k = coords_train[!train_k == fold,]
+      coords_train_k <- coords_train[train_k == fold, ]
+      coords_test_k <- coords_train[!train_k == fold, ]
 
-      knn = queryNamedKNN(coords_train_k, coords_test_k, k = max_k)
+      knn <- queryNamedKNN(coords_train_k, coords_test_k, k = max_k)
 
-      labels_train = labels[rownames(coords_train_k)]
-      labels_test = labels[rownames(coords_test_k)]
+      labels_train <- labels[rownames(coords_train_k)]
+      labels_test <- labels[rownames(coords_test_k)]
 
-      E = getBinaryError(knn = knn,
-                         k_values = k_values,
-                         class_train = labels_train,
-                         class_true = labels_test)
+      E <- getBinaryError(
+        knn = knn,
+        k_values = k_values,
+        class_train = labels_train,
+        class_true = labels_test
+      )
 
       E_list[[length(E_list) + 1]] <- E
-
     }
-
   }
-  E = combineBinaryErrors(E_list)[rownames(coords_train),]
+  E <- combineBinaryErrors(E_list)[rownames(coords_train), ]
 
 
   if (type == "uniform_optimised") {
-
     # select the best column based on the error type
     if (error_measure == "simple_error") {
-      best_column = getBestColumn(E)
+      best_column <- getBestColumn(E)
     }
     if (error_measure == "balanced_error") {
-      best_column = getBestColumn(E, balanced_labels = labels[rownames(E)])
+      best_column <- getBestColumn(E, balanced_labels = labels[rownames(E)])
     }
-    k_adaptive = k_values[best_column]
+    k_adaptive <- k_values[best_column]
   }
 
   if (type == "adaptive_labels") {
-    best_k_labels_index = getAdaptiveK(E,
-                                       labels = labels[rownames(E)],
-                                       local = NULL,
-                                       outputPerCell = TRUE)
-    best_k_labels <- vectorSubset(k_values, as.matrix(best_k_labels_index))[,1]
+    best_k_labels_index <- getAdaptiveK(E,
+      labels = labels[rownames(E)],
+      local = NULL,
+      outputPerCell = TRUE
+    )
+    best_k_labels <- vectorSubset(k_values, as.matrix(best_k_labels_index))[, 1]
 
     # if any are NA, select the geometric mean value among the rest
     best_k_labels[is.na(best_k_labels)] <- ceiling(gm_mean(best_k_labels))
 
-    k_adaptive = best_k_labels[names(labels)]
+    k_adaptive <- best_k_labels[names(labels)]
   }
 
   if (type == "adaptive_local") {
+    local <- queryNamedKNN(coords_train, coords_train, k = adaptive_local_nhood)
 
-    local = queryNamedKNN(coords_train, coords_train, k = adaptive_local_nhood)
-
-    best_k_local_index = getAdaptiveK(E,
-                                      local = local,
-                                      outputPerCell = TRUE)
-    best_k_local_unsmoothed <- vectorSubset(k_values, as.matrix(best_k_local_index))[,1]
+    best_k_local_index <- getAdaptiveK(E,
+      local = local,
+      outputPerCell = TRUE
+    )
+    best_k_local_unsmoothed <- vectorSubset(k_values, as.matrix(best_k_local_index))[, 1]
 
     if (any(is.na(best_k_local_unsmoothed))) {
-      defined = names(best_k_local_unsmoothed)[!is.na(best_k_local_unsmoothed)]
+      defined <- names(best_k_local_unsmoothed)[!is.na(best_k_local_unsmoothed)]
 
-      local_defined = queryNamedKNN(coords_train[defined,], coords_train, k = adaptive_local_nhood)
+      local_defined <- queryNamedKNN(coords_train[defined, ], coords_train, k = adaptive_local_nhood)
     } else {
-      local_defined = local
+      local_defined <- local
     }
 
     best_k_local <- smoothLocal(best_k_local_unsmoothed, local_defined, smooth = adaptive_local_smooth)
 
-    k_adaptive = best_k_local[names(labels)]
+    k_adaptive <- best_k_local[names(labels)]
   }
 
   # with k_adaptive defined, perform the classification and extract out
 
-  max_k = max(k_adaptive)
+  max_k <- max(k_adaptive)
 
-  knn = queryNamedKNN(coords_train, coords, k = max_k)
+  knn <- queryNamedKNN(coords_train, coords, k = max_k)
 
-  resubstituted_labels = adaptiveKNN(knn,
-                                     labels,
-                                     k_adaptive)
+  resubstituted_labels <- adaptiveKNN(
+    knn,
+    labels,
+    k_adaptive
+  )
 
-  out = buildLabelsDataFrame(labels, resubstituted_labels, k_adaptive = k_adaptive)
+  out <- buildLabelsDataFrame(labels, resubstituted_labels, k_adaptive = k_adaptive)
 
   return(out)
-
 }
