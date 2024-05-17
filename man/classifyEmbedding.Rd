@@ -86,7 +86,7 @@ table(knn_out$predicted_labels)
 knn_out <- classifyEmbedding(
 coords, labels,
 type = "adaptive_local",
-k_values = 2:4,
+k_values = 2:3,
 adaptive_nFold = 5,
 adaptive_nRep = 10
 )
@@ -95,7 +95,7 @@ table(knn_out$predicted_labels)
 knn_out <- classifyEmbedding(
   coords, labels,
   type = "adaptive_labels",
-  k_values = 2:4,
+  k_values = 2:3,
   adaptive_nFold = 5,
   adaptive_nRep = 10
 )
@@ -105,7 +105,7 @@ table(knn_out$predicted_labels)
 knn_out <- classifyEmbedding(
   coords, labels,
   type = "uniform_optimised",
-  k_values = 2:4,
+  k_values = 2:3,
   adaptive_nFold = 3,
   adaptive_nRep = 10,
   error_measure = "balanced_error"
