@@ -182,8 +182,12 @@ getBinaryError <- function(knn,
 
   if (max(unlist(k_values)) > ncol(knn)) {
     # if (max(k_values) > ncol(knn)) {
-    stop("largest k value is larger than neighbours provided in knn,
-         select a smaller k value or provide more neighbours")
+    m <- paste0(
+      "largest k value is larger than neighbours provided in knn (i.e. ",
+      ncol(knn),
+      "), select a smaller k value or provide more neighbours"
+    )
+    stop(m)
   }
 
   # class_pred = adaptiveKNN(knn, class = class_train, k_local = k_values[1])
