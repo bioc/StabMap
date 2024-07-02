@@ -48,11 +48,6 @@
 #'
 #' @export
 reWeightEmbedding <- function(embedding, weights = NULL, factor = 1e6) {
-  # embedding is a cells x dimensions matrix
-  # weights is an optional named list (names correspond to all before the
-  # underscore)
-  # for weighting each embedding component
-  # factor is a multiplicative value to avoid tiny numbers
   cols <- as.character(interaction(gsub("_PC.*|_LD.*", "", colnames(embedding)),
     ifelse(grepl("_PC", colnames(embedding)), "PC", "LD"),
     sep = "_"

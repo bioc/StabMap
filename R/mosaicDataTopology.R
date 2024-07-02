@@ -18,10 +18,6 @@
 #'
 #' @export
 mosaicDataTopology <- function(assay_list) {
-  # given a list of assays, generate a
-  # network relating the datasets to each other
-  # in terms of number of shared features
-  # (rownames)
 
   datasets <- names(assay_list)
 

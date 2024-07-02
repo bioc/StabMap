@@ -148,8 +148,6 @@ stabMap <- function(assay_list,
     x[MatrixGenerics::rowVars(x) > 0, ]
   })
 
-  # if labels_list given the entries should match the ncol(assay_list)
-  # to-do
 
   ## remove messages from calculatePCA
   if (suppressMessages) {
@@ -192,7 +190,7 @@ stabMap <- function(assay_list,
   if (plot) plot(assay_network)
 
   ## check whether the network is a connected component
-  ## the number of components should be 1:
+  ## the number of components should be 1
   if (igraph::components(assay_network)$no != 1) {
     stop(
       "feature network is not connected, features must overlap in some way via",

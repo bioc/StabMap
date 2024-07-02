@@ -13,13 +13,6 @@
 #'
 #' @keywords internal
 "%projpred%" <- function(a, b) {
-  # a is a matrix
-  # b is a list of a 1. projection matrix
-  # and 2. a model to pass through predict
-  # if b is not a list, then just do normal
-  # matrix multiplication
-  # alternatively, if b is already an lda
-  # object then just perform the prediction
 
   if (methods::is(b, "lda")) {
     features <- rownames(b$scaling)

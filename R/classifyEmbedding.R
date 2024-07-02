@@ -96,35 +96,6 @@ classifyEmbedding <- function(
     adaptive_local_nhood = 100,
     adaptive_local_smooth = 10,
     verbose = TRUE) {
-  # to-do:
-  # the cross validation step can be parallelised
-  # provide a priori values for adaptive k rather than need to calculate
-
-  # coords is cells (rows) x dimensions data matrix, on which euclidean
-  # distances are to be calculated. coords must have rownames
-  # labels is a named character vector
-  # type is one of "adaptive_local", "adaptive_labels",
-  # "uniform_optimised", or "uniform_fixed"
-  # k_values is a numeric vector of potential values. if type is "uniform_fixed",
-  # then the first value of k_values is used.
-  # error_measure is the error type to use for selection. Simple error is used
-  # for adaptive_local and adaptive_labels (since balanced error can be noisy)
-  # adaptive_nFold is the number of folds for adaptive selection cross-validation
-  # adaptive_nRep is the number of repetitions of adaptive selection cross-validation
-  # adaptive_local_nhood is the neighbourhood size for optimising locally
-  # adaptive_local_smooth is the number of neighbours to use for smoothing locally
-
-  # output is a dataframe with rows the same as coords, and same rownames
-  # columns are input_labels: NA-filled labels that were input
-  # resubstituted_labels is full reclassified labels including for the training data
-  # predicted_labels = input_labels is the classified labels along with the input
-  # training labels
-
-  # example data
-  # coords = matrix(rnorm(1000), 100, 10)
-  # rownames(coords) <- paste0("cell_", 1:nrow(coords))
-  # labels = rep(paste0("type_", letters[1:5]), 10)
-  # names(labels) <- rownames(coords)[1:length(labels)]
 
   if (is.null(rownames(coords)[1])) {
     stop("coords must have rownames")
@@ -153,11 +124,6 @@ classifyEmbedding <- function(
 
     return(out)
   }
-
-  # all other types require some adaptive or optimised component
-
-  # if neither of above types are chosen, then an error matrix
-  # is needed, using internal cross-validation
 
   E_list <- list()
 
@@ -246,8 +212,6 @@ classifyEmbedding <- function(
 
     k_adaptive <- best_k_local[names(labels)]
   }
-
-  # with k_adaptive defined, perform the classification and extract out
 
   max_k <- max(k_adaptive)
 

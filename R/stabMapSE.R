@@ -20,7 +20,7 @@ stabMapSE <- function(SE_list,
   }
 
   stopifnot(
-    "SE_assay_names should have names corrisponding to the SE objects in assay_list" = setequal(names(SE_list), names(assays))
+    "SE_assay_names should have names corresponding to the SE objects in assay_list" = setequal(names(SE_list), names(assays))
   )
 
   assay_list <- mapply(

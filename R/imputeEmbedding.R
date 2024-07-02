@@ -40,14 +40,6 @@ imputeEmbedding <- function(assay_list,
                             query = Reduce(union, lapply(assay_list, colnames)),
                             neighbours = 5,
                             fun = mean) {
-  # naive imputation given a (potentially batch corrected) StabMap embedding
-  # input:
-  # assay_list (typically the original input to StabMap)
-  # which are the query cells
-  # which are the reference cells
-  # number of nearest neighbours
-  # combining function: mean by default
-  # default behaviour is to output a smoothed assay_list object
 
   has_reference <- lapply(
     assay_list, function(x) any(reference %in% colnames(x))

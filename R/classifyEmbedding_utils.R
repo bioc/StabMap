@@ -45,11 +45,6 @@ getArgMin <- function(M, return_colnames = TRUE, identicalNA = TRUE) {
 #'
 #' @keywords internal
 getModeFirst <- function(x, first) {
-  # identify the mode of x among the first values
-  # x is a character or a factor
-  # first is an integer
-  # x = knn_class[1,]
-  # first = query_best_k[i]
   names(which.max(table(x[seq_len(first)])[unique(x[seq_len(first)])]))
 }
 
@@ -70,23 +65,12 @@ getModeFirst <- function(x, first) {
 #'
 #' @keywords internal
 getQueryK <- function(knn, k_local) {
-  # knn is a k-nearest neighbour matrix, giving the
-  # indices of the training set that the query is
-  # closest to. Rows are the query cells, columns
-  # are the NNs, should be a large value. Typically
-  # output using BiocNeighbors::queryKNN(,,k = max(k_local))
-
-  # k_local is an integer vector length of the training
-  # set, giving the local k to use
-  # if k_local is given as a single integer, then
-  # that value is used as k for all observations
 
   if (length(k_local) == 1) {
     k_local <- rep(k_local, nrow(knn))
     return(k_local)
   }
 
-  # Use 1NN to identify the local best k value
   query_best_k <- k_local[knn[, 1]]
 
   return(query_best_k)
@@ -104,7 +88,6 @@ getQueryK <- function(knn, k_local) {
 #'
 #' @keywords internal
 isUnequal <- function(x, y) {
-  # returns an integer vector
   1 * (as.character(x) != as.character(y))
 }
 
@@ -144,44 +127,8 @@ getBinaryError <- function(knn,
                            k_values,
                            class_train,
                            class_true) {
-  # output is a sparse binary error matrix E
-
-  # knn is a k-nearest neighbour matrix, giving the
-  # indices of the training set that the query is
-  # closest to. Rows are the query cells, columns
-  # are the NNs, should be a large value. Typically
-  # output using BiocNeighbors::queryKNN(,,k = max(k_values))
-
-  # k_values is an integer vector of the values of k
-  # to consider for extracting accuracy
-  # if k_values has names then pass these to
-  # colnames of E
-
-  # class_train is a factor or character vector of
-  # classes that corresponds to the indices given
-  # within knn
-
-  # class_true is a factor or character vector that
-  # corresponds to the rows of knn
-  # if class_true has names then pass these to rownames
-  # of E
-
-  # example data
-  # data = matrix(rpois(10*20, 10), 10, 20) # 10 genes, 20 cells
-  # local = BiocNeighbors::findKNN(t(data), k = 5, get.distance = FALSE)$index
-  # A = matrix(runif(100),20,5)
-  # colnames(A) <- paste0("K_", 1:5)
-  # labels = factor(rep(letters[1:2], each = 10))
-  # k_local = getAdaptiveK(A, labels = labels)
-  # data_2 = matrix(rpois(10*30, 10), 10, 30) # 10 genes, 30 cells
-  # knn = BiocNeighbors::queryKNN(t(data), t(data_2), k = 5, get.distance = FALSE)$index
-  # class = labels
-  # class_train = labels
-  # class_true = rep(letters[1], 30)
-  # k_values = c(1,3,5)
 
   if (max(unlist(k_values)) > ncol(knn)) {
-    # if (max(k_values) > ncol(knn)) {
     m <- paste0(
       "largest k value is larger than neighbours provided in knn (i.e. ",
       ncol(knn),
@@ -189,9 +136,6 @@ getBinaryError <- function(knn,
     )
     stop(m)
   }
-
-  # class_pred = adaptiveKNN(knn, class = class_train, k_local = k_values[1])
-  # isEqual(class_pred, class_true)
 
   class_pred <- mapply(
     adaptiveKNN, k_values,
@@ -219,16 +163,6 @@ getBinaryError <- function(knn,
 #'
 #' @keywords internal
 combineBinaryErrors <- function(E_list) {
-  # E_list is a list containing matrices
-  # each matrix must have the same number of columns (k-values)
-  # and contain rownames (cells)
-
-  # example data
-  # E_1 = as(matrix(rbinom(50, 1, 0.5), 10, 5), "sparseMatrix")
-  # rownames(E_1) <- letters[1:10]
-  # E_2 = as(matrix(rbinom(60, 1, 0.5), 12, 5), "sparseMatrix")
-  # rownames(E_2) <- letters[5:16]
-  # E_list = list(E_1, E_2)
 
   if (!allEqual(unlist(lapply(E_list, ncol)))) {
     stop("each matrix in E_list must have the same number of columns")
@@ -265,9 +199,6 @@ combineBinaryErrors <- function(E_list) {
 #' @keywords internal
 getBestColumn <- function(E,
                           balanced_labels = NULL) {
-  # returns the index of the best performing column of E
-  # if balanced_labels given then return the best
-  # given the balanced accuracy, otherwise just total accuracy
 
   if (is.null(balanced_labels)) {
     return(which.min(colMeans(E, na.rm = TRUE)))
@@ -294,8 +225,7 @@ getBestColumn <- function(E,
 #'
 #' @keywords internal
 smoothLocal <- function(best_k, local, smooth = 10, mean_type = "geometric") {
-  # best_k is a named vector of local best k values
-  # local is a matrix with rows same as best_k and values indices of best_k
+
   nms <- names(best_k)
 
   if (mean_type == "arithmetic") {
@@ -345,14 +275,6 @@ gm_mean <- function(x, na.rm = TRUE) {
 #'
 #' @keywords internal
 buildLabelsDataFrame <- function(labels, resubstituted_labels, k_adaptive) {
-  # labels is a named character vector with true labels
-  # resubstituted_labels is a named character vector with
-  # extra labels
-  # k_adaptive is a named vector of the k-values, this could
-  # be a single integer when fixed
-
-  # output a dataframe with rows the same as resubstituted_labels
-  # and columns for input_labels, predicted_labels, and resubstituted_labels
 
   df <- data.frame(
     input_labels = as.character(labels[names(resubstituted_labels)]),
@@ -382,11 +304,6 @@ buildLabelsDataFrame <- function(labels, resubstituted_labels, k_adaptive) {
 #'
 #' @keywords internal
 getBinaryErrorFromPredictions <- function(pred, labels) {
-  # pred is a matrix of class label predictions
-  # with named rows
-  # labels is a named vector of true labels
-
-  # output is a binary error matrix, sparse
 
   E <- methods::as(
     apply(pred, 2, isUnequal, y = labels[rownames(pred)]), "sparseMatrix"
@@ -409,7 +326,6 @@ getBinaryErrorFromPredictions <- function(pred, labels) {
 #'
 #' @keywords internal
 queryNamedKNN <- function(coords_reference, coords_query, k) {
-  # used in imputeEmbedding()
 
   knn <- BiocNeighbors::queryKNN(
     coords_reference,
