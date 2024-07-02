@@ -4,18 +4,17 @@
 
 ## Installation
 
-Install the following packages using `BiocManager`:
+Install `StabMap` via Bioconductor 
 
 ``` r
-# install.packages("BiocManager")
-BiocManager::install(c("scran"))
+library(BiocManager)
+BiocManager::install("StabMap")
 ```
 
-Then install `StabMap` using `devtools`:
+Install the Github version of StabMap
 
 ``` r
-library(devtools)
-devtools::install_github("SydneyBioX/StabMap")
+BiocManager::install("SydneyBioX/StabMap")
 ```
 
 ## Vignette
@@ -33,4 +32,4 @@ c. The process described in panel b is performed for various selected reference 
 
 ## Contact
 
-shila.ghazanfar \<at\> sydney.edu.au, shila.ghazanfar \<at\> cruk.cam.ac.uk, or marioni \<at\> ebi.ac.uk.
+shila.ghazanfar \<at\> sydney.edu.au, or marioni \<at\> ebi.ac.uk.

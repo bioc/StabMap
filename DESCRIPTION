@@ -31,13 +31,13 @@ Imports:
     MASS,
     abind,
     scran,
-    UpSetR,
     SummarizedExperiment,
     methods,
     MatrixGenerics,
     BiocGenerics
 Suggests: 
     knitr,
+    UpSetR,
     gridExtra,
     SingleCellMultiModal,
     BiocStyle,

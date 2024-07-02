@@ -21,6 +21,11 @@
 #'
 #' @export
 mosaicDataUpSet <- function(assay_list, plot = FALSE, ...) {
+
+  if (!requireNamespace("UpSetR", quietly = TRUE)) {
+    stop("Install 'UpSetR' to use this function")
+  }
+
   df <- as.data.frame(1 * do.call(
     cbind,
     lapply(
