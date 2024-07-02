@@ -273,7 +273,7 @@ stabMap <- function(assay_list,
           ) %*1% loadings_reference
         }
 
-        d_nPC <- diag(nPC)
+        d_nPC <- diag(ncol(reference_scores_raw))
         colnames(d_nPC) <- paste0(
           reference_dataset, "_", colnames(reference_scores)
         )
@@ -378,7 +378,7 @@ stabMap <- function(assay_list,
           )
           if (path_current[1] == reference_dataset) {
             current_scores <- as.matrix(reference_scores)
-            # edit by shila to replace by intersecting among the loadings
+
             # features when nearest the reference
             if (projectionType == "PC" && restrictFeatures) {
               features_current <- intersect(
@@ -445,7 +445,8 @@ stabMap <- function(assay_list,
               }
 
               genevars <- scran::modelGeneVar(
-                assay_list[[path_current[1]]][features_current, ]
+                assay_list[[path_current[1]]][features_current, ],
+                min.mean = 0
               )
               genevars_sorted <- genevars[
                 order(genevars$bio, decreasing = TRUE),
