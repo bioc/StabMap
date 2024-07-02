@@ -42,7 +42,8 @@ Suggests:
     SingleCellMultiModal,
     BiocStyle,
     magrittr,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    purrr
 LazyData: false
 RoxygenNote: 7.3.1
 VignetteBuilder: knitr

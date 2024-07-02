@@ -219,7 +219,7 @@ stabMap <- function(assay_list,
     if (!reference_list[[reference_dataset]]) next
 
     m <- paste0("treating \"", reference_dataset, "\" as reference")
-    message(m)
+    if (verbose) message(m)
 
     ## when the graph has a weight, then by default it will use them
     # shortest path is weighted by the number of shared features
