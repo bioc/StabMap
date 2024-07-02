@@ -41,7 +41,9 @@ Suggests:
     gridExtra,
     SingleCellMultiModal,
     BiocStyle,
-    magrittr
+    magrittr,
+    testthat (>= 3.0.0)
 LazyData: false
 RoxygenNote: 7.3.1
 VignetteBuilder: knitr
+Config/testthat/edition: 3
