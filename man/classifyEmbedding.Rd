@@ -7,9 +7,9 @@
 classifyEmbedding(
   coords,
   labels,
-  type = "uniform_fixed",
+  type = c("uniform_fixed", "adaptive_labels", "adaptive_local", "uniform_optimised"),
   k_values = 5,
-  error_measure = "simple_error",
+  error_measure = c("simple_error", "balanced_error"),
   adaptive_nFold = 2,
   adaptive_nRep = 5,
   adaptive_local_nhood = 100,

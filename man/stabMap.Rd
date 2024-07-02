@@ -19,7 +19,8 @@ stabMap(
   plot = TRUE,
   scale.center = TRUE,
   scale.scale = TRUE,
-  SE_assay_names = "logcounts"
+  SE_assay_names = "logcounts",
+  verbose = TRUE
 )
 }
 \arguments{
@@ -76,6 +77,8 @@ FALSE).}
 the SummarizedExperiment objects in assay_list or a named list of assay
 names, where the names corrispond to the names SE objects in assay_list
 (default "logcounts")}
+
+\item{verbose}{Logical whether console output is provided (default TRUE)}
 }
 \value{
 matrix containing common embedding with rows corresponding to cells,
