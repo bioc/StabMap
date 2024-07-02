@@ -18,7 +18,7 @@ Description: StabMap performs single cell mosaic data integration by first
     given reference and query cell lists.
 License: GPL-2
 Encoding: UTF-8
-URL: https://sydneybiox.github.io/StabMap
+URL: https://sydneybiox.github.io/StabMap, https://sydneybiox.github.io/StabMap/
 BugReports: https://github.com/sydneybiox/StabMap/issues
 biocViews: SingleCell, DimensionReduction, Software
 Depends: R (>= 4.4.0),
