@@ -370,7 +370,7 @@ stabMap <- function(assay_list,
 
         while (length(path_current) > 1) {
           features_current <- Reduce(
-            intersect, lapply(assay_list[path_current[1:2]], rownames)
+            intersect, lapply(assay_list[path_current[seq_len(2)]], rownames)
           )
           if (path_current[1] == reference_dataset) {
             current_scores <- as.matrix(reference_scores)
@@ -387,7 +387,7 @@ stabMap <- function(assay_list,
                   " to intersection"
                 )
                 features_current <- Reduce(
-                  intersect, lapply(assay_list[path_current[1:2]], rownames)
+                  intersect, lapply(assay_list[path_current[seq_len(2)]], rownames)
                 )
               }
             }
@@ -500,7 +500,7 @@ stabMap <- function(assay_list,
 
             obj_previous_previous <- obj[seq_len(previous_previous_ind)]
             ops_previous_previous <- rev(
-              rev(ops)[1:(length(obj_previous_previous) - 1)]
+              rev(ops)[seq_len(length(obj_previous_previous) - 1)]
             )
 
             obj_previous_previous[[length(obj_previous_previous) + 1]] <- t(
