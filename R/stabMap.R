@@ -44,6 +44,7 @@
 #'   the SummarizedExperiment objects in assay_list or a named list of assay
 #'   names, where the names corrispond to the names SE objects in assay_list
 #'   (default "logcounts")
+#' @param verbose Logical whether console output is provided (default TRUE)
 #'
 #' @return matrix containing common embedding with rows corresponding to cells,
 #' and columns corresponding to PCs or LDs for reference dataset(s).
@@ -92,7 +93,8 @@ stabMap <- function(assay_list,
                     plot = TRUE,
                     scale.center = TRUE,
                     scale.scale = TRUE,
-                    SE_assay_names = "logcounts") {
+                    SE_assay_names = "logcounts",
+                    verbose = TRUE) {
   # check various things and error if not:
 
   if (is.null(reference_list)) {
@@ -228,7 +230,7 @@ stabMap <- function(assay_list,
       )[, reference_dataset])
     )
     all_paths <- lapply(igraph::all_shortest_paths(assay_network,
-      from = reference_dataset
+                                                   from = reference_dataset
     )$res, names)
     names(all_paths) <- unlist(lapply(all_paths, function(x) rev(x)[1]))
     all_paths <- all_paths[to_nodes]
@@ -242,7 +244,7 @@ stabMap <- function(assay_list,
     for (projectionType in c("PC", "LD")) {
       if (projectionType %in% "PC") {
         if (!is.null(reference_scores_list[[reference_dataset]])) {
-          message("reference scores given, using these for mosaic integration")
+          if (verbose) message("reference scores given, using these for mosaic integration")
           reference_scores <- reference_scores_list[[reference_dataset]]
           restrictFeatures <- FALSE
         } else {
@@ -289,7 +291,7 @@ stabMap <- function(assay_list,
           reference_dataset,
           "\", adding LD components"
         )
-        message(m)
+        if (verbose) message(m)
 
         features <- Reduce(intersect, lapply(assay_list, rownames))
         if (length(features) == 0) {
@@ -297,10 +299,12 @@ stabMap <- function(assay_list,
         }
 
         if (length(features) > maxFeatures) {
-          message(
-            "more input features than maxFeatures, subsetting features using",
-            " variance ranking"
-          )
+          if (verbose) {
+            message(
+              "more input features than maxFeatures, subsetting features using",
+              " variance ranking"
+            )
+          }
           genevars <- scran::modelGeneVar(
             assay_list[[reference_dataset]][features, ]
           )
@@ -320,14 +324,14 @@ stabMap <- function(assay_list,
           na.rm = TRUE
         )
         if (any(vars == 0)) {
-          message("removing features with zero intra-class variance")
+          if (verbose) message("removing features with zero intra-class variance")
         }
         features <- features[vars > 0]
 
         data_train <- t(assay_list[[reference_dataset]][features, ])
 
         lda.fit <- sm(MASS::lda(data_train[!is.na(labels_train), ],
-          grouping = labels_train[!is.na(labels_train)]
+                                grouping = labels_train[!is.na(labels_train)]
         ))
         colnames(lda.fit$scaling) <- paste0(
           reference_dataset, "_", colnames(lda.fit$scaling)
@@ -347,12 +351,14 @@ stabMap <- function(assay_list,
       embedding_list <- list()
 
       for (path in all_paths) {
-        message(paste0(
-          "generating embedding for path with reference \"",
-          reference_dataset,
-          "\": ",
-          paste0(rev(paste0("\"", path, "\"")), collapse = " -> ")
-        ))
+        if (verbose) {
+          message(paste0(
+            "generating embedding for path with reference \"",
+            reference_dataset,
+            "\": ",
+            paste0(rev(paste0("\"", path, "\"")), collapse = " -> ")
+          ))
+        }
 
         if (identical(as.character(path), reference_dataset)) {
           embedding_list[[reference_dataset]] <- reference_scores %projpred% P_0
@@ -380,10 +386,12 @@ stabMap <- function(assay_list,
                 rownames(assay_list[[path_current[2]]])
               )
               if (length(features_current) == 0) {
-                message(
-                  "No common features when using restrictFeatures, switching",
-                  " to intersection"
-                )
+                if (verbose) {
+                  message(
+                    "No common features when using restrictFeatures, switching",
+                    " to intersection"
+                  )
+                }
                 features_current <- Reduce(
                   intersect, lapply(assay_list[path_current[seq_len(2)]], rownames)
                 )
@@ -429,10 +437,12 @@ stabMap <- function(assay_list,
             ## if there are more than maxFeatures in features_current,
             ## then restrict to HVGs
             if (length(features_current) > maxFeatures) {
-              message(
-                "more input features than maxFeatures, subsetting features",
-                " using variance ranking"
-              )
+              if (verbose) {
+                message(
+                  "more input features than maxFeatures, subsetting features",
+                  " using variance ranking"
+                )
+              }
 
               genevars <- scran::modelGeneVar(
                 assay_list[[path_current[1]]][features_current, ]
