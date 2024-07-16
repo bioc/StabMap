@@ -44,6 +44,8 @@
 #'   the SummarizedExperiment objects in assay_list or a named list of assay
 #'   names, where the names corrispond to the names SE objects in assay_list
 #'   (default "logcounts")
+#' @param BPPARAM a BiocParallelParam object specifying how parallelisation
+#' should be performed
 #' @param verbose Logical whether console output is provided (default TRUE)
 #'
 #' @return matrix containing common embedding with rows corresponding to cells,
@@ -78,6 +80,7 @@
 #' head(out)
 #'
 #' @importFrom MatrixGenerics rowMaxs rowWeightedVars
+#' @importFrom BiocParallel SerialParam bpstart bpstop
 #' @export
 stabMap <- function(assay_list,
                     labels_list = NULL,
@@ -94,7 +97,9 @@ stabMap <- function(assay_list,
                     scale.center = TRUE,
                     scale.scale = TRUE,
                     SE_assay_names = "logcounts",
-                    verbose = TRUE) {
+                    BPPARAM = SerialParam(),
+                    verbose = TRUE
+                    ) {
   # check various things and error if not:
 
   if (is.null(reference_list)) {
@@ -248,15 +253,29 @@ stabMap <- function(assay_list,
           reference_scores <- reference_scores_list[[reference_dataset]]
           restrictFeatures <- FALSE
         } else {
-          reference_scores_raw <- sm(
-            scater::calculatePCA(
-              assay_list[[reference_dataset]][
-                reference_features_list[[reference_dataset]],
-              ],
-              ncomponents = nPC,
-              scale = FALSE
-            )
+          # reference_scores_raw <- sm(
+          #   scater::calculatePCA(
+          #     assay_list[[reference_dataset]][
+          #       reference_features_list[[reference_dataset]],
+          #     ],
+          #     ncomponents = nPC,
+          #     scale = FALSE
+          #   )
+          # )
+          # start replacement
+          reference_scores_obj = BiocSingular::runPCA(
+            t(assay_list[[reference_dataset]][
+              reference_features_list[[reference_dataset]],
+            ]),
+            rank = nPC,
+            scale = FALSE,
+            BPPARAM = BPPARAM
           )
+
+          reference_scores_raw <- reference_scores_obj$x
+          attr(reference_scores_raw, "rotation") <- reference_scores_obj$rotation
+          # end replacement
+
 
           attr(reference_scores_raw, "rotation") <- list(
             attr(reference_scores_raw, "rotation"),
@@ -411,11 +430,24 @@ stabMap <- function(assay_list,
               ncomponentsSubset[[reference_dataset]], length(features_current)
             )
 
-            dimred_current <- sm(scater::calculatePCA(
-              assay_list[[path_current[1]]][features_current, ],
-              ncomponents = nPC_sub,
-              scale = FALSE
-            ))
+            # dimred_current <- sm(scater::calculatePCA(
+            #   assay_list[[path_current[1]]][features_current, ],
+            #   ncomponents = nPC_sub,
+            #   scale = FALSE
+            # ))
+            # start replacement
+            dimred_current_obj = BiocSingular::runPCA(
+              t(assay_list[[path_current[1]]][features_current, ]),
+              rank = nPC_sub,
+              scale = FALSE,
+              BPPARAM = BPPARAM
+            )
+
+            dimred_current <- dimred_current_obj$x
+            attr(dimred_current, "rotation") <- dimred_current_obj$rotation
+            # end replacement
+
+
             attr(dimred_current, "rotation") <- list(
               attr(dimred_current, "rotation"),
               rowMeans(assay_list[[path_current[1]]][features_current, ])

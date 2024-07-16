@@ -20,6 +20,7 @@ stabMap(
   scale.center = TRUE,
   scale.scale = TRUE,
   SE_assay_names = "logcounts",
+  BPPARAM = SerialParam(),
   verbose = TRUE
 )
 }
@@ -77,6 +78,9 @@ FALSE).}
 the SummarizedExperiment objects in assay_list or a named list of assay
 names, where the names corrispond to the names SE objects in assay_list
 (default "logcounts")}
+
+\item{BPPARAM}{a BiocParallelParam object specifying how parallelisation
+should be performed}
 
 \item{verbose}{Logical whether console output is provided (default TRUE)}
 }

@@ -24,7 +24,6 @@ biocViews: SingleCell, DimensionReduction, Software
 Depends: R (>= 4.4.0),
 Imports: 
     igraph,
-    scater,
     slam,
     BiocNeighbors,
     Matrix,
@@ -34,7 +33,9 @@ Imports:
     SummarizedExperiment,
     methods,
     MatrixGenerics,
-    BiocGenerics
+    BiocGenerics,
+    BiocSingular,
+    BiocParallel
 Suggests: 
     knitr,
     UpSetR,

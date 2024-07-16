@@ -25,7 +25,6 @@ knitr::opts_chunk$set(
 ```{r setup, message=FALSE, warning=FALSE}
 library(StabMap)
 library(scran)
-library(scater)
 library(magrittr)
 
 library(SingleCellMultiModal)
