@@ -324,11 +324,13 @@ stabMap <- function(assay_list,
               " variance ranking"
             )
           }
-          genevars <- scran::modelGeneVar(
-            assay_list[[reference_dataset]][features, ]
-          )
-          genevars_sorted <- genevars[order(genevars$bio, decreasing = TRUE), ]
-          features <- rownames(genevars_sorted)[seq_len(maxFeatures)]
+          # genevars <- scran::modelGeneVar(
+          #   assay_list[[reference_dataset]][features, ]
+          # )
+          # genevars_sorted <- genevars[order(genevars$bio, decreasing = TRUE), ]
+          # features <- rownames(genevars_sorted)[seq_len(maxFeatures)]
+          # replacement below
+          features = selectFeatures(assay_list[[reference_dataset]], features, maxFeatures)
         }
 
         labels_train <- labels_list[[reference_dataset]]
@@ -476,16 +478,21 @@ stabMap <- function(assay_list,
                 )
               }
 
-              genevars <- scran::modelGeneVar(
-                assay_list[[path_current[1]]][features_current, ],
-                min.mean = 0
-              )
-              genevars_sorted <- genevars[
-                order(genevars$bio, decreasing = TRUE),
-              ]
-              features_current <- rownames(
-                genevars_sorted
-              )[seq_len(maxFeatures)]
+              # genevars <- scran::modelGeneVar(
+              #   assay_list[[path_current[1]]][features_current, ],
+              #   min.mean = 0
+              # )
+              # genevars_sorted <- genevars[
+              #   order(genevars$bio, decreasing = TRUE),
+              # ]
+              # features_current <- rownames(
+              #   genevars_sorted
+              # )[seq_len(maxFeatures)]
+              # replacement below
+
+              features_current = selectFeatures(assay_list[[path_current[1]]],
+                                                features_current,
+                                                maxFeatures)
             }
 
             coef <- stats::lm.fit(

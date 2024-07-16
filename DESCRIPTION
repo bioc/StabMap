@@ -29,7 +29,6 @@ Imports:
     Matrix,
     MASS,
     abind,
-    scran,
     SummarizedExperiment,
     methods,
     MatrixGenerics,
@@ -37,6 +36,8 @@ Imports:
     BiocSingular,
     BiocParallel
 Suggests: 
+    scran,
+    scater,
     knitr,
     UpSetR,
     gridExtra,
