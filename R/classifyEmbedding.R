@@ -38,6 +38,7 @@
 #' that each row of the training set.
 #'
 #' @examples
+#' set.seed(100)
 #' # Simulate coordinates
 #' coords <- matrix(rnorm(1000), 100, 10)
 #' rownames(coords) <- paste0("cell_", 1:nrow(coords))
@@ -128,7 +129,7 @@ classifyEmbedding <- function(
     return(out)
   }
 
-  E_list <- list()
+  E_list <- vector("list", length = adaptive_nRep)
 
   for (Rep in seq_len(adaptive_nRep)) {
     train_k <- sample(seq_len(adaptive_nFold), nrow(coords_train),
@@ -155,7 +156,7 @@ classifyEmbedding <- function(
         class_true = labels_test
       )
 
-      E_list[[length(E_list) + 1]] <- E
+      E_list[[Rep]] <- E
     }
   }
   E <- combineBinaryErrors(E_list)[rownames(coords_train), ]

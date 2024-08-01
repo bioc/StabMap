@@ -67,6 +67,7 @@ training labels are defined in `labels`, with all other rows of the
 embedding treated as the testing set.
 }
 \examples{
+set.seed(100)
 # Simulate coordinates
 coords <- matrix(rnorm(1000), 100, 10)
 rownames(coords) <- paste0("cell_", 1:nrow(coords))
