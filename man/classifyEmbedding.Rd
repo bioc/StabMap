@@ -70,11 +70,11 @@ embedding treated as the testing set.
 set.seed(100)
 # Simulate coordinates
 coords <- matrix(rnorm(1000), 100, 10)
-rownames(coords) <- paste0("cell_", 1:nrow(coords))
+rownames(coords) <- paste0("cell_", seq_len(nrow(coords)))
 
 # Define labels of the first 50 cells
 labels <- rep(paste0("type_", letters[1:5]), 10)
-names(labels) <- rownames(coords)[1:length(labels)]
+names(labels) <- rownames(coords)[seq_along(labels)]
 
 # Uniform fixed KNN classification
 knn_out <- classifyEmbedding(

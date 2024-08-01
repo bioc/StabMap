@@ -57,4 +57,37 @@ test_that("classifyEmbedding works", {
   testthat::expect_snapshot_value(
     knn_out, style = "serialize"
   )
+
+  # expect error if coords and labels don't match names
+  # because of no names in label
+  testthat::expect_error(quietCE(
+    coords, setNames(labels, NULL),
+    type = "uniform_optimised",
+    k_values = 2:3,
+    adaptive_nFold = 3,
+    adaptive_nRep = 10,
+    error_measure = "balanced_error"
+  ))
+
+  # expect error if coords and labels don't match names
+  # because of actual mismatch
+  testthat::expect_error(quietCE(
+    coords, setNames(labels, seq_along(labels)),
+    type = "uniform_optimised",
+    k_values = 2:3,
+    adaptive_nFold = 3,
+    adaptive_nRep = 10,
+    error_measure = "balanced_error"
+  ))
+
+  # expect error if coords is transposed, error will
+  # be because of not matching labels
+  testthat::expect_error(quietCE(
+    t(coords), labels,
+    type = "uniform_optimised",
+    k_values = 2:3,
+    adaptive_nFold = 3,
+    adaptive_nRep = 10,
+    error_measure = "balanced_error"
+  ))
 })

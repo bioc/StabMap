@@ -24,4 +24,18 @@ test_that("stabMap works", {
     out,
     style = "serialize"
   )
+
+  # error if only one input dataset
+  testthat::expect_error(stabMap(assay_list[[1]]))
+
+  # error if mismatch of colnames
+  testthat::expect_error(stabMap(assay_list[c(1,3)]))
+
+  # warning if ncomponents set higher than number of samples
+  testthat::expect_warning(stabMap(assay_list,
+                                 reference_list = reference_list,
+                                 ncomponentsReference = 100,
+                                 ncomponentsSubset = 50,
+                                 verbose = FALSE
+  ))
 })
