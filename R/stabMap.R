@@ -79,7 +79,7 @@
 #'
 #' head(out)
 #'
-#' @importFrom MatrixGenerics rowMaxs rowWeightedVars
+#' @importFrom MatrixGenerics rowMaxs rowWeightedVars rowVars
 #' @importFrom BiocParallel SerialParam bpstart bpstop
 #' @export
 stabMap <- function(assay_list,
