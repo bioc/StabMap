@@ -1,7 +1,7 @@
 Package: StabMap
 Type: Package
 Title: Stabilised mosaic single cell data integration using unshared features
-Version: 1.0.0
+Version: 1.1.0
 Authors@R: c(
     person("Shila", "Ghazanfar", , "shazanfar@gmail.com", role = c("aut", "cre", "ctb")),
     person("Aiden", "Jin", role = "ctb"),
