@@ -40,6 +40,12 @@ imputeEmbedding <- function(assay_list,
                             query = Reduce(union, lapply(assay_list, colnames)),
                             neighbours = 5,
                             fun = mean) {
+  
+  embedding_knn <- embedding
+  if (methods::is(embedding_knn, "dgCMatrix") &&
+      !methods::hasMethod("queryKNN", signature = c("dgCMatrix", "missing"))) {
+    embedding_knn <- as.matrix(embedding_knn)
+  }
 
   has_reference <- lapply(
     assay_list, function(x) any(reference %in% colnames(x))
@@ -55,7 +61,7 @@ imputeEmbedding <- function(assay_list,
     referenceCells <- intersect(reference, colnames(assayMat))
 
     knn_out <- queryNamedKNN(
-      embedding[referenceCells, ], embedding[query, ], neighbours
+      embedding_knn[referenceCells, ], embedding_knn[query, ], neighbours
     )
 
     imputedList <- apply(knn_out, 2, function(knnval) {
